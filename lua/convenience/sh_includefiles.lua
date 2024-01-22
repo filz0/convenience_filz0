@@ -1,0 +1,6 @@
+AddCSLuaFile("sh_conv.lua")
+AddCSLuaFile("sh_misc.lua")
+AddCSLuaFile("sh_ent.lua")
+include("sh_conv.lua")
+include("sh_misc.lua")
+include("sh_ent.lua")
