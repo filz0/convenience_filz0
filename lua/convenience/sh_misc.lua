@@ -16,7 +16,7 @@ function PLY:PosInView( pos )
         mask = MASK_VISIBLE,
     })
 
-    return angleDifference <= self:GetFOV() && !tr.Hit
+    return angleDifference <= self:GetFOV()*1.25 && !tr.Hit
 
 end
 
@@ -34,9 +34,6 @@ function table.InsertEntity( tbl, ent )
 end
 
 
-
-
-    
 if SERVER then
 
     -- Spawn a NPC from the spawn menu
