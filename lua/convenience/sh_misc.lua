@@ -38,7 +38,7 @@ end
 
     -- Spawn a NPC from the spawn menu
 if SERVER then
-    function ents.CreateSpawnMenuNPC( SpawnMenuClass, pos )
+    function ents.CreateSpawnMenuNPC( SpawnMenuClass, pos, wep )
 
 
         -- Find NPC in spawn menu
@@ -64,7 +64,7 @@ if SERVER then
         -- Give weapon
         if SpawnMenuTable.Weapons then
 
-            local wep = table.Random(SpawnMenuTable.Weapons)
+            local wep = wep or table.Random(SpawnMenuTable.Weapons)
 
             if wep then
                 NPC:Give( wep )
