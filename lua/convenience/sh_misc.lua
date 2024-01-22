@@ -36,13 +36,15 @@ end
 
 
 
-    -- Spawn a NPC from the spawn menu
+    
 if SERVER then
+
+    -- Spawn a NPC from the spawn menu
     function ents.CreateSpawnMenuNPC( SpawnMenuClass, pos, wep )
 
 
         -- Find NPC in spawn menu
-        local SpawnMenuTable = list.Get("NPC")[SpawnMenuClass]
+        local SpawnMenuTable = ents.__SpawnMenuNPCs__ && ents.__SpawnMenuNPCs__[SpawnMenuClass] or list.Get("NPC")[SpawnMenuClass]
         if !SpawnMenuTable then
             ErrorNoHaltWithStack("No such NPC found: '", SpawnMenuClass, "'\n")
             return
@@ -100,4 +102,5 @@ if SERVER then
 
 
     end
+
 end
