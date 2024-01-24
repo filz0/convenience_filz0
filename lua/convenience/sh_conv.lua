@@ -18,13 +18,9 @@ function conv.callAfterTicks( ticknum, func, ... )
 
     conv.callNextTick( function( ... )
 
-        -- print("... = ", ...)
-
         if ticknum <= 0 then
-            -- print("did func")
             func(...)
         else
-            -- print("waited 1 tick")
             conv.callAfterTicks( ticknum-1, func, ... )
         end
         
