@@ -65,9 +65,9 @@ end
 
     -- Spawns an entity for a short duration allowing you to obtain info about it
 function ents.GetInfo( cls, func )
+
     local ent = ents.Create(cls)
     if !IsValid(ent) then
-        print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
         ErrorNoHaltWithStack("No such ENT found: '", cls, "'\n")
         return
     end
