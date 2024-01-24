@@ -19,7 +19,9 @@ function ents.CreateSpawnMenuNPC( SpawnMenuClass, pos, wep )
 
 
     -- Position
-    NPC:SetPos(pos)
+    if isvector(pos) then
+        NPC:SetPos(pos)
+    end
 
 
     -- Give weapon
