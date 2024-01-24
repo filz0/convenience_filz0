@@ -13,6 +13,28 @@ function conv.callNextTick( func, ... )
 end
 
 
+    -- Do something after a certain amount of ticks/frames
+function conv.callAfterTicks( ticknum, func, ... )
+
+    conv.callNextTick( function( ... )
+
+        -- print("... = ", ...)
+
+        if ticknum <= 0 then
+            -- print("did func")
+            func(...)
+        else
+            -- print("waited 1 tick")
+            conv.callAfterTicks( ticknum-1, func, ... )
+        end
+        
+
+    end, ... )
+
+end
+
+
+
     -- Create a simple derma frame
 function conv.dermaFrame( title, width, height )
     local frame = vgui.Create("DFrame")

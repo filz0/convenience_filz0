@@ -16,7 +16,8 @@ function PLY:PosInView( pos )
         mask = MASK_VISIBLE,
     })
 
-    return angleDifference <= self:GetFOV()*1.25 && !tr.Hit
+
+    return angleDifference <= self:GetFOV() && !tr.Hit
 
 end
 

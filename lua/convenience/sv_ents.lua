@@ -73,9 +73,13 @@ function ents.GetInfo( cls, func )
     end
 
 
-    conv.callNextTick(function()
-        func(ent)
-        ent:Remove()
-    end)
+    ent:Spawn()
+    ent:Activate()
+
+
+    conv.callAfterTicks(1, function( Ent )
+        func(Ent)
+        Ent:Remove()
+    end, ent)
 
 end
