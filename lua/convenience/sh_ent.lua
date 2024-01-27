@@ -1,6 +1,21 @@
 local ENT = FindMetaTable("Entity")
 
 
+    -- Call a method for this ent next tick
+function ENT:CallNextTick( methodname, ... )
+
+    local function func( me, ... )
+        if IsValid(me) then
+            me[methodname](me, ...)
+        end
+    end
+
+
+    conv.callNextTick( func, self, ... )
+
+end
+
+
     -- Temporarily set a variable on an entity
 function ENT:TempVar( name, value, duration )
 
