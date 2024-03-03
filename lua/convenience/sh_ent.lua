@@ -56,3 +56,8 @@ function ENT:ConvTimer( id, delay, func, reps )
     return TimerName
 
 end
+
+
+function ENT:Conv_HasFlags( flags )
+    return bit.band(self:GetFlags(), flags)==flags
+end
