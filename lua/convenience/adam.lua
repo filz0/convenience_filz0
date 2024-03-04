@@ -1,6 +1,3 @@
-print("CONV INIT!!!!")
-
-
 -- Add client lua files
 AddCSLuaFile("sh_conv.lua")
 AddCSLuaFile("sh_misc.lua")
