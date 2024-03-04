@@ -1,9 +1,3 @@
---[[
-=======================================================================================================================
-                                            CONVENIENCE LIB
-=======================================================================================================================
---]]
--- -- Missing conv message
 -- if CLIENT then
 --     function MissingConvMsg()
 --         local frame = vgui.Create("DFrame")
@@ -25,41 +19,13 @@
 --         label:Dock(BOTTOM)
 --         label:SetContentAlignment(5)  -- 5 corresponds to center alignment
 --     end
--- end
-
-
--- if file.Exists("convenience/adam.lua", "LUA") then
-
---     -- Include conv library
---     AddCSLuaFile("convenience/adam.lua")
---     include("convenience/adam.lua")
-
--- elseif SERVER then
-
+-- elseif SERVER && !file.Exists("convenience/adam.lua", "LUA") then
 --     -- Conv lib not on on server, send message to clients
 --     hook.Add("PlayerInitialSpawn", "convenienceerrormsg", function( ply )
 --         local sendstr = 'MissingConvMsg()'
 --         ply:SendLua(sendstr)
 --     end)
-
 -- end
 
-
--- Add client lua files
-AddCSLuaFile("sh_conv.lua")
-AddCSLuaFile("sh_misc.lua")
-AddCSLuaFile("sh_ent.lua")
-AddCSLuaFile("sh_hooks.lua")
-
-
--- Shared
-include("sh_conv.lua")
-include("sh_misc.lua")
-include("sh_ent.lua")
-include("sh_hooks.lua")
-
-
--- Server
-if SERVER then
-    include("sv_ents.lua")
-end
+AddCSLuaFile("convenience/adam.lua")
+include("convenience/adam.lua")
