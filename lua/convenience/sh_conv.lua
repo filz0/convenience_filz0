@@ -40,3 +40,16 @@ function conv.dermaFrame( title, width, height )
 	frame:MakePopup()
     return frame
 end
+
+
+-- function conv.option( data )
+--     local option = {}
+--     option.cvar = data.cvar
+--     option.type = data.dermaType
+-- end
+
+
+--     -- Create a tool menu where:
+--     -- Options should be a sequential table with options created by conv.option()
+-- function conv.createToolMenu( tab, category, name, options )
+-- end
