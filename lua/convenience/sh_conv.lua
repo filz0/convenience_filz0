@@ -1,4 +1,6 @@
 conv = {} -- "conv library"
+local Developer = GetConVar("developer")
+
 
 
     -- Do something next tick/frame
@@ -40,6 +42,29 @@ function conv.dermaFrame( title, width, height )
 	frame:MakePopup()
     return frame
 end
+
+
+    -- Checks if any player can see this position right now
+function conv.playersSeePos( pos )
+    for _, ply in player.Iterator() do
+        if ply:PosInView(pos) then
+            return true
+        end
+    end
+end
+
+
+    -- Debug Overlay QOL
+    -- https://wiki.facepunch.com/gmod/debugoverlay
+    -- conv.Overlay("Something", function()
+    --     return {}
+    -- end)
+function conv.Overlay( funcname, argsFunc )
+    if !Developer:GetBool() then return end
+    local args = argsFunc()
+    debugoverlay[funcname](unpack(args))
+end
+
 
 
 -- function conv.option( data )
