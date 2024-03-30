@@ -4,7 +4,19 @@ hook.Add("InitPostEntity", "CONV", function()
 
     -- Add zbase npcs if it is installed
     if ZBaseInstalled then
-        table.Add(ents._SpawnMenuNPCs, ZBaseSpawnMenuNPCList)
+        local ZBSpawnMenu = {}
+        
+        for cls, tbl in pairs(ZBaseSpawnMenuNPCList) do
+
+            local copy = table.Copy(tbl)
+            copy.KeyValues = copy.KeyValues or {}
+            copy.KeyValues.parentname = cls
+
+            ZBSpawnMenu[cls] = copy
+
+        end
+
+        table.Merge(ents._SpawnMenuNPCs, ZBSpawnMenu)
     end
 
 end)
