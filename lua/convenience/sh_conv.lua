@@ -66,6 +66,12 @@ function conv.overlay( funcname, argsFunc )
 end
 
 
+    -- Gets spawnmenu NPC list
+function conv.getSpawnMenuNPCs()
+    return ents._SpawnMenuNPCs
+end
+
+
 
 -- function conv.option( data )
 --     local option = {}
