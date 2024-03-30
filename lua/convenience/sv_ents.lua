@@ -79,7 +79,7 @@ function ents.GetInfo( cls, func )
     ent:Activate()
 
 
-    conv.callAfterTicks(1, function( Ent )
+    conv.callNextTick(function( Ent )
         func(Ent)
         Ent:Remove()
     end, ent)

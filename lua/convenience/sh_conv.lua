@@ -56,10 +56,10 @@ end
 
     -- Debug Overlay QOL
     -- https://wiki.facepunch.com/gmod/debugoverlay
-    -- conv.Overlay("Something", function()
+    -- conv.overlay("Something", function()
     --     return {}
     -- end)
-function conv.Overlay( funcname, argsFunc )
+function conv.overlay( funcname, argsFunc )
     if !Developer:GetBool() then return end
     local args = argsFunc()
     debugoverlay[funcname](unpack(args))
