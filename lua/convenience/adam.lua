@@ -6,14 +6,14 @@ print("CONV loaded "..CONV_LOAD_TIMES.." time(s)!")
 AddCSLuaFile("sh_conv.lua")
 AddCSLuaFile("sh_misc.lua")
 AddCSLuaFile("sh_ent.lua")
-AddCSLuaFile("sh_hooks.lua")
+AddCSLuaFile("sh_internals.lua")
 
 
 -- Shared
 include("sh_conv.lua")
 include("sh_misc.lua")
 include("sh_ent.lua")
-include("sh_hooks.lua")
+include("sh_internals.lua")
 
 
 -- Server
