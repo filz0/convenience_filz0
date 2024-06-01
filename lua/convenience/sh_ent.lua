@@ -58,6 +58,15 @@ function ENT:ConvTimer( id, delay, func, reps )
 end
 
 
+function ENT:Conv_STimer( delay, func, ... )
+    timer.Simple(delay, function()
+        if IsValid(self) then
+            func(...)
+        end
+    end)
+end
+
+
 function ENT:Conv_HasFlags( flags )
     if !IsValid(self) then return false end
     return bit.band(self:GetFlags(), flags)==flags
