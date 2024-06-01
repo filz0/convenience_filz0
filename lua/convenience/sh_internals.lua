@@ -13,11 +13,13 @@ if SERVER then
             return
         end
 
+        print("[CONV] Doing arun...")
+
         local fname = args[1]
 
         if !fname then
             fname = "convenience"
-            MsgN("conv lib reload")
+            MsgN("[CONV] Lib reload")
         end
 
 
@@ -27,8 +29,6 @@ if SERVER then
         for _, ply in player.Iterator() do
             ply:SendLua("include('autorun/"..fname..".lua')")
         end
-
-        MsgN("success")
 
     end, nil, "DO NOT USE.")
 end
