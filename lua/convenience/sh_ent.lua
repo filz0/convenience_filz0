@@ -59,9 +59,10 @@ end
 
 
 function ENT:Conv_STimer( delay, func, ... )
+    local tbl = table.Pack(...)
     timer.Simple(delay, function()
         if IsValid(self) then
-            func(...)
+            func(unpack(tbl))
         end
     end)
 end
