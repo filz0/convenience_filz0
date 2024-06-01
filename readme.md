@@ -1,1 +1,1 @@
-GLua library for Gmod.
+My GLua library for Gmod.
