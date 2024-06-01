@@ -44,7 +44,7 @@ function conv.dermaFrame( title, width, height )
 end
 
 
-    -- Checks if any player can see this position right now
+    -- Checks if any player on the server can see this position right now
 function conv.playersSeePos( pos )
     for _, ply in player.Iterator() do
         if ply:PosInView(pos) then

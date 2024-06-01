@@ -1,7 +1,7 @@
 local PLY = FindMetaTable("Player")
 
 
-    -- Check if any player can see this position
+    -- Check if the player can see this position
 function PLY:PosInView( pos )
 
     -- mafs idk chat gpt wrote this

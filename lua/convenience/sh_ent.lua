@@ -32,6 +32,7 @@ function ENT:TempVar( name, value, duration )
 end
 
 
+    -- DEPRECATED
     -- A regular timer, but just for entities
     -- Will stop if the ent is not valid
     -- Id does not have to include entindex, that is done automatically
@@ -58,6 +59,7 @@ function ENT:ConvTimer( id, delay, func, reps )
 end
 
 
+    -- Timer simple for entities with a built-in valid check
 function ENT:Conv_STimer( delay, func, ... )
     local tbl = table.Pack(...)
     timer.Simple(delay, function()
@@ -68,6 +70,7 @@ function ENT:Conv_STimer( delay, func, ... )
 end
 
 
+    -- Check if an entity has the supplied flags
 function ENT:Conv_HasFlags( flags )
     if !IsValid(self) then return false end
     return bit.band(self:GetFlags(), flags)==flags
