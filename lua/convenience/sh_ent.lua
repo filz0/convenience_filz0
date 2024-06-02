@@ -19,13 +19,17 @@ end
     -- Temporarily set a variable on an entity
 function ENT:TempVar( name, value, duration )
 
-    local ValBefore = self[name]
+    self[name.."ValBefore"] = self[name.."ValBefore"] or self[name]
     self[name] = value
+
+    -- print(name, "set to", value)
 
 
     timer.Create("TempVar"..name..self:EntIndex(), duration, 1, function()
         if IsValid(self) then
             self[name] = ValBefore
+            self[name.."ValBefore"] = nil
+            -- print(name, "set back to", ValBefore)
         end
     end)
 
