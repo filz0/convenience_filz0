@@ -36,6 +36,31 @@ function ENT:TempVar( name, value, duration )
 end
 
 
+    -- Temporarily sets variables created by ENT:NetworkVar()
+function ENT:TempNetVar( funcName, value, duration )
+
+    local setFuncName = "Set"..funcName
+    local getFuncName = "Get"..funcName
+
+    if !self[setFuncName.."NetValBefore"] then
+        self[setFuncName](name, value)
+        print("set net var")
+    end
+
+    self[setFuncName.."NetValBefore"] = self[setFuncName.."NetValBefore"] or self[getFuncName]()
+
+    timer.Create("TempNetVar"..setFuncName..self:EntIndex(), duration, 1, function()
+        if IsValid(self) then
+            self[setFuncName](value)
+            self[setFuncName.."NetValBefore"] = nil
+            print("reset net var")
+        end
+    end)
+
+end
+
+
+
     -- DEPRECATED
     -- A regular timer, but just for entities
     -- Will stop if the ent is not valid
