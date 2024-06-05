@@ -44,7 +44,6 @@ function ENT:TempNetVar( funcName, value, duration )
 
     if !self[setFuncName.."NetValBefore"] then
         self[setFuncName](name, value)
-        print("set net var")
     end
 
     self[setFuncName.."NetValBefore"] = self[setFuncName.."NetValBefore"] or self[getFuncName]()
@@ -53,7 +52,6 @@ function ENT:TempNetVar( funcName, value, duration )
         if IsValid(self) then
             self[setFuncName](value)
             self[setFuncName.."NetValBefore"] = nil
-            print("reset net var")
         end
     end)
 
