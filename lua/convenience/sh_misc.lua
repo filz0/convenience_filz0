@@ -33,3 +33,22 @@ function table.InsertEntity( tbl, ent )
     end)
 
 end
+
+
+    -- debug.Trace but you can choose which level to start from
+function debug.ConvTraceFrom(level)
+	while true do
+
+		local info = debug.getinfo( level, "Sln" )
+		if ( !info ) then break end
+
+		if ( info.what ) == "C" then
+			MsgN( string.format( "\t%i: C function\t\"%s\"", level, info.name ) )
+		else
+			MsgN( string.format( "\t%i: Line %d\t\"%s\"\t\t%s", level, info.currentline, info.name, info.short_src ) )
+		end
+
+		level = level + 1
+
+	end
+end
