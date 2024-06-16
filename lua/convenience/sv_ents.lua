@@ -6,13 +6,20 @@ function ents.CreateSpawnMenuNPC( SpawnMenuClass, pos, wep )
     local SpawnMenuTable = ents._SpawnMenuNPCs[SpawnMenuClass]
 
 
-    local isZBaseNPC
+    -- Check if zbase npc
+    local zbasetable
     if ZBaseInstalled then
-        SpawnMenuTable = ZBaseNPCs[SpawnMenuClass]
-        isZBaseNPC = istable(SpawnMenuTable)
+        zbasetable = ZBaseNPCs[SpawnMenuClass]
+    end
+    local isZBaseNPC = false
+    if istable(zbasetable) then
+        SpawnMenuTable = zbasetable
+        isZBaseNPC = true
+        print("isZBaseNPC ( istable(zbasetable) is true )")
     end
 
 
+    -- No such NPC
     if !SpawnMenuTable then
         ErrorNoHaltWithStack("No such NPC found: '", SpawnMenuClass, "'\n")
         return
@@ -23,6 +30,7 @@ function ents.CreateSpawnMenuNPC( SpawnMenuClass, pos, wep )
     if isZBaseNPC then
 
         -- Stop here
+        wep = wep or "default"
         return ZBaseSpawnZBaseNPC( SpawnMenuClass, pos, nil, wep)
 
     end
@@ -32,6 +40,7 @@ function ents.CreateSpawnMenuNPC( SpawnMenuClass, pos, wep )
     local NPC = ents.Create( SpawnMenuTable.Class )
 
 
+    -- No such NPC
     if !IsValid(NPC) then
         ErrorNoHaltWithStack("No such NPC found: '", SpawnMenuTable.Class, "'\n")
         return
@@ -45,7 +54,7 @@ function ents.CreateSpawnMenuNPC( SpawnMenuClass, pos, wep )
 
 
     -- Give weapon
-    if !isZBaseNPC && SpawnMenuTable.Weapons then
+    if SpawnMenuTable.Weapons then
 
         local wep = wep or table.Random(SpawnMenuTable.Weapons)
 
