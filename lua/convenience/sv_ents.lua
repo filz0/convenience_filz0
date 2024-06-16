@@ -15,7 +15,6 @@ function ents.CreateSpawnMenuNPC( SpawnMenuClass, pos, wep )
     if istable(zbasetable) then
         SpawnMenuTable = zbasetable
         isZBaseNPC = true
-        print("isZBaseNPC ( istable(zbasetable) is true )")
     end
 
 
