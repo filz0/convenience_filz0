@@ -54,13 +54,6 @@ function ents.CreateSpawnMenuNPC( SpawnMenuClass, pos, wep )
 
     -- Default weapons if none if provided
     wep = wep or (SpawnMenuTable.Weapons && table.Random(SpawnMenuTable.Weapons))
-
-    -- 'wep' is a table
-    if istable(wep) then
-        wep = table.Random(wep)
-    end
-
-    -- Give weapon
     if isstring(wep) then
         NPC:Give( wep )
     end
