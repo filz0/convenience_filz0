@@ -1,3 +1,5 @@
+// More entity methods
+
 local ENT = FindMetaTable("Entity")
 
 

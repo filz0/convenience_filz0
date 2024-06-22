@@ -17,13 +17,8 @@ end
 --]]
 
 if CLIENT then
-    concommand.Add("conv_run_zippy_arun", function(ply, cmd, args)
-
-
-    end)
-
-    concommand.Add("conv_run_zippy_arun", function(ply, cmd, args)
-
-
+    concommand.Add("conv_strip", function(ply, cmd, args)
+        net.Start("ConvStrip")
+        net.SendToServer()
     end)
 end

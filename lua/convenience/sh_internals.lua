@@ -1,3 +1,6 @@
+// Internal code for CONV, do not use
+
+
 --[[
 ==================================================================================================
                     SERVER COMMANDS
@@ -47,3 +50,24 @@ hook.Add("InitPostEntity", "CONV", function()
     ents._SpawnMenuNPCs = list.Get("NPC") 
 
 end)
+
+
+--[[
+==================================================================================================
+                    NET CODE
+==================================================================================================
+--]]
+
+if SERVER then
+
+        -- Add network strings
+    util.AddNetworkString("ConvStrip")
+    
+
+        -- Strip the players weapons and ammo on server from client
+    net.Receive("ConvStrip", function(len, ply)
+        ply:StripWeapons()
+        ply:RemoveAllAmmo()
+    end)
+
+end
