@@ -1,3 +1,5 @@
+conv = {}
+
 local files = file.Find("convenience/*", "LUA")
 
 -- Backwards compatability maybe...

@@ -1,3 +1,5 @@
+// 'ents' library extensions
+
     -- Spawn a NPC from the spawn menu
 function ents.CreateSpawnMenuNPC( SpawnMenuClass, pos, wep )
 

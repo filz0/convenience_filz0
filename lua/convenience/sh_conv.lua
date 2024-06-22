@@ -1,8 +1,3 @@
-conv = {} -- "conv library"
-local Developer = GetConVar("developer")
-
-
-
     -- Do something next tick/frame
 function conv.callNextTick( func, ... )
 
@@ -36,10 +31,10 @@ end
     -- Create a simple derma frame
 function conv.dermaFrame( title, width, height )
     local frame = vgui.Create("DFrame")
-	frame:SetPos( (ScrW()*0.5)-width*0.5, (ScrH()*0.5)-height*0.5 )
-	frame:SetSize(width, height)
+    frame:SetPos( (ScrW()*0.5)-width*0.5, (ScrH()*0.5)-height*0.5 )
+    frame:SetSize(width, height)
     frame:SetTitle(title)
-	frame:MakePopup()
+    frame:MakePopup()
     return frame
 end
 
@@ -70,17 +65,3 @@ end
 function conv.getSpawnMenuNPCs()
     return ents._SpawnMenuNPCs
 end
-
-
-
--- function conv.option( data )
---     local option = {}
---     option.cvar = data.cvar
---     option.type = data.dermaType
--- end
-
-
---     -- Create a tool menu where:
---     -- Options should be a sequential table with options created by conv.option()
--- function conv.createToolMenu( tab, category, name, options )
--- end

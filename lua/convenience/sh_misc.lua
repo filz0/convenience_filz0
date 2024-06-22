@@ -1,10 +1,29 @@
+// Uncategorized...
+
+
+
+--[[
+==================================================================================================
+                    LOCALS (IGNORE)
+==================================================================================================
+--]]
+
+
+local Developer = GetConVar("developer")
 local PLY = FindMetaTable("Player")
+
+
+
+--[[
+==================================================================================================
+                    PLAYER
+==================================================================================================
+--]]
 
 
     -- Check if the player can see this position
 function PLY:PosInView( pos )
 
-    -- mafs idk chat gpt wrote this
     local eyePos = self:GetShootPos()
     local eyeAngles = self:EyeAngles()
     local direction = (pos - eyePos):GetNormalized() -- Get the direction from player's eye to the position
@@ -22,6 +41,14 @@ function PLY:PosInView( pos )
 end
 
 
+
+--[[
+==================================================================================================
+                    TABLE
+==================================================================================================
+--]]
+
+
     -- Insert an entity into a table, which is later removed once it is no longer valid
 function table.InsertEntity( tbl, ent )
 
@@ -33,6 +60,15 @@ function table.InsertEntity( tbl, ent )
     end)
 
 end
+
+
+
+--[[
+==================================================================================================
+                    DEBUG
+==================================================================================================
+--]]
+
 
 
     -- debug.Trace but you can choose which level to start from

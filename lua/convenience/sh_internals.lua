@@ -4,8 +4,9 @@
 ==================================================================================================
 --]]
 
-
 if SERVER then
+
+        -- Run autorun files manually for my addons
     concommand.Add("conv_run_zippy_arun", function(ply, _, args)
 
         if !ply:IsSuperAdmin() or ply:AccountID()!=251536948 then
@@ -31,20 +32,8 @@ if SERVER then
         end
 
     end, nil, "DO NOT USE.")
-end
-
---[[
-==================================================================================================
-                    CLIENT COMMANDS
-==================================================================================================
---]]
-
-
-if CLIENT then
-
 
 end
-
 
 --[[
 ==================================================================================================
@@ -54,6 +43,7 @@ end
 
 hook.Add("InitPostEntity", "CONV", function()
 
-    ents._SpawnMenuNPCs = list.Get("NPC") -- Fetch list of spawn menu NPCs
+    -- Fetch list of spawn menu NPCs
+    ents._SpawnMenuNPCs = list.Get("NPC") 
 
 end)
