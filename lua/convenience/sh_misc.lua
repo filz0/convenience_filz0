@@ -11,7 +11,7 @@
 
 local Developer = GetConVar("developer")
 local PLY = FindMetaTable("Player")
-
+local MaxAmmoCvar = GetConVar("gmod_maxammo")
 
 
 --[[
@@ -87,4 +87,25 @@ function debug.ConvTraceFrom(level)
 		level = level + 1
 
 	end
+end
+
+
+--[[
+==================================================================================================
+                    GAME
+==================================================================================================
+--]]
+
+    -- Just like https://wiki.facepunch.com/gmod/game.GetAmmoMax
+    -- But it respects the gmod_maxammo cvar
+function game.GetCurrentAmmoMax(id)
+    local cvarMax = MaxAmmoCvar:GetInt()
+
+
+    if cvarMax <= 0 then
+        return game.GetAmmoMax(id)
+    else
+        return cvarMax
+    end
+
 end

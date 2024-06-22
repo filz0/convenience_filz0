@@ -21,4 +21,9 @@ if CLIENT then
         net.Start("ConvStrip")
         net.SendToServer()
     end)
+
+    concommand.Add("conv_giveammo", function(ply, cmd, args)
+        net.Start("ConvGiveAmmo")
+        net.SendToServer()
+    end)
 end
