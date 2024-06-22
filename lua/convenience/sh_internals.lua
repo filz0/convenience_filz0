@@ -47,7 +47,8 @@ end
 hook.Add("InitPostEntity", "CONV", function()
 
     -- Fetch list of spawn menu NPCs
-    ents._SpawnMenuNPCs = list.Get("NPC") 
+    local npcs = list.Get("NPC") 
+    ents._SpawnMenuNPCs = npcs -- DEPRECATED
 
 end)
 

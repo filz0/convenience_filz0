@@ -71,9 +71,9 @@ function conv.overlay( funcname, argsFunc )
 end
 
 
-    -- Gets spawnmenu NPC list
+    -- DEPRECATED
 function conv.getSpawnMenuNPCs()
-    return ents._SpawnMenuNPCs
+    return table.Copy(ents._SpawnMenuNPCs)
 end
 
 
