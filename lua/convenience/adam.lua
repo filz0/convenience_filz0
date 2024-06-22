@@ -1,22 +1,30 @@
 -- CONV_LOAD_TIMES = (CONV_LOAD_TIMES && CONV_LOAD_TIMES + 1) or 1
 -- print("CONV loaded "..CONV_LOAD_TIMES.." time(s)!")
 
+local files = file.Find("convenience/*", "LUA")
+if !files then return end
 
--- Add client lua files
-AddCSLuaFile("sh_conv.lua")
-AddCSLuaFile("sh_misc.lua")
-AddCSLuaFile("sh_ent.lua")
-AddCSLuaFile("sh_internals.lua")
+for _, filename in ipairs(files) do
+    filename = "convenience/"..filename
+    if string.StartsWith(filename, "cl_") then
 
+        AddCSLuaFile(filename)
 
--- Shared
-include("sh_conv.lua")
-include("sh_misc.lua")
-include("sh_ent.lua")
-include("sh_internals.lua")
+        if CLIENT then
+            include(filename)
+            MsgN(filename, " included")
+        end
 
+    elseif string.StartsWith(filename, "sh_") then
 
--- Server
-if SERVER then
-    include("sv_ents.lua")
+        AddCSLuaFile(filename)
+        include(filename)
+        MsgN(filename, " included")
+
+    elseif string.StartsWith(filename, "sv_") && SERVER then
+
+        include(filename)
+        MsgN(filename, " included")
+
+    end
 end
