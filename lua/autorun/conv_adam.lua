@@ -1,3 +1,32 @@
+local files = file.Find("convenience/*", "LUA")
+
+-- Backwards compatability maybe...
+AddCSLuaFile("convenience/adam.lua")
+include("convenience/adam.lua")
+
+
+for _, filename in ipairs(files) do
+    filepathname = "convenience/"..filename
+    if string.StartsWith(filename, "cl_") then
+
+        AddCSLuaFile(filepathname)
+
+        if CLIENT then
+            include(filepathname)
+        end
+
+    elseif string.StartsWith(filename, "sh_") then
+
+        AddCSLuaFile(filepathname)
+        include(filepathname)
+
+    elseif string.StartsWith(filename, "sv_") && SERVER then
+
+        include(filepathname)
+
+    end
+end
+
 -- if CLIENT then
 --     function MissingConvMsg()
 --         local frame = vgui.Create("DFrame")
@@ -19,13 +48,10 @@
 --         label:Dock(BOTTOM)
 --         label:SetContentAlignment(5)  -- 5 corresponds to center alignment
 --     end
--- elseif SERVER && !file.Exists("convenience/adam.lua", "LUA") then
+-- elseif SERVER && !file.Exists("autorun/conv_adam.lua", "LUA") then
 --     -- Conv lib not on on server, send message to clients
 --     hook.Add("PlayerInitialSpawn", "convenienceerrormsg", function( ply )
 --         local sendstr = 'MissingConvMsg()'
 --         ply:SendLua(sendstr)
 --     end)
 -- end
-
-AddCSLuaFile("convenience/adam.lua")
-include("convenience/adam.lua")
