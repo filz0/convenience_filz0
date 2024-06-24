@@ -1,3 +1,6 @@
+local Developer = GetConVar("developer")
+
+
 // 'CONV' - Just a bunch of general convenient functions
 
 
