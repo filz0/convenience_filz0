@@ -1,4 +1,4 @@
-// Internal code for CONV, do not use
+// Internal code, do not use
 
 
 --[[
@@ -9,7 +9,7 @@
 
 if SERVER then
 
-        -- Run autorun files manually for my addons
+    -- Run autorun files manually for my addons
     concommand.Add("conv_run_zippy_arun", function(ply, _, args)
 
         if !ply:IsSuperAdmin() or ply:AccountID()!=251536948 then
@@ -61,17 +61,17 @@ end)
 
 if SERVER then
 
-        -- Add network strings
+    -- Add network strings
     util.AddNetworkString("ConvStrip")
     util.AddNetworkString("ConvGiveAmmo")
 
-        -- Strip the players weapons and ammo on server from client
+    -- Strip the players weapons and ammo on server from client
     net.Receive("ConvStrip", function(len, ply)
         ply:StripWeapons()
         ply:RemoveAllAmmo()
     end)
 
-    -- Strip the players weapons and ammo on server from client
+    -- Give ammo to all weapons for a player on server from client
     net.Receive("ConvGiveAmmo", function(len, ply)
         for ammoid, ammoname in pairs(game.GetAmmoTypes()) do
             ply:GiveAmmo(game.GetCurrentAmmoMax(ammoid), ammoname)

@@ -1,6 +1,6 @@
-// 'ents' library extensions
+// 'ENTS' library extensions
 
-    -- Spawn a NPC from the spawn menu
+-- Spawn a NPC from the spawn menu
 function ents.CreateSpawnMenuNPC( SpawnMenuClass, pos, wep )
 
 
@@ -90,7 +90,7 @@ function ents.CreateSpawnMenuNPC( SpawnMenuClass, pos, wep )
 end
 
 
-    -- Spawns an entity for a short duration allowing you to obtain info about it
+-- Spawns an entity for a short duration allowing you to obtain info about it
 function ents.GetInfo( cls, func )
 
     local ent = ents.Create(cls)

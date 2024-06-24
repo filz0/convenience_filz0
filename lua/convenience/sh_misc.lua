@@ -1,45 +1,8 @@
-// Uncategorized...
-
-
-
---[[
-==================================================================================================
-                    LOCALS (IGNORE)
-==================================================================================================
---]]
-
-
 local Developer = GetConVar("developer")
-local PLY = FindMetaTable("Player")
 local MaxAmmoCvar = GetConVar("gmod_maxammo")
 
 
---[[
-==================================================================================================
-                    PLAYER
-==================================================================================================
---]]
-
-
-    -- Check if the player can see this position
-function PLY:PosInView( pos )
-
-    local eyePos = self:GetShootPos()
-    local eyeAngles = self:EyeAngles()
-    local direction = (pos - eyePos):GetNormalized() -- Get the direction from player's eye to the position
-    local angleDifference = math.deg(math.acos(eyeAngles:Forward():Dot(direction))) -- Calculate angle difference
-
-    local tr = util.TraceLine({
-        start = eyePos,
-        endpos = pos,
-        mask = MASK_VISIBLE,
-    })
-
-
-    return angleDifference <= self:GetFOV() && !tr.Hit
-
-end
-
+// Miscellaneous
 
 
 --[[
@@ -49,7 +12,7 @@ end
 --]]
 
 
-    -- Insert an entity into a table, which is later removed once it is no longer valid
+-- Insert an entity into a table, which is later removed once it is no longer valid
 function table.InsertEntity( tbl, ent )
 
     if !IsValid(ent) then return end -- Must be ent
@@ -71,7 +34,7 @@ end
 
 
 
-    -- debug.Trace but you can choose which level to start from
+-- debug.Trace but you can choose which level to start from
 function debug.ConvTraceFrom(level)
 	while true do
 
@@ -96,8 +59,8 @@ end
 ==================================================================================================
 --]]
 
-    -- Just like https://wiki.facepunch.com/gmod/game.GetAmmoMax
-    -- But it respects the gmod_maxammo cvar
+-- Just like https://wiki.facepunch.com/gmod/game.GetAmmoMax
+-- But it respects the gmod_maxammo cvar
 function game.GetCurrentAmmoMax(id)
     local cvarMax = MaxAmmoCvar:GetInt()
 
