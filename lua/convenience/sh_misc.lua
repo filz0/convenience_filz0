@@ -18,12 +18,15 @@ function table.InsertEntity( tbl, ent )
     if !IsValid(ent) then return end -- Must be ent
 
     table.insert(tbl, ent)
+
+
     ent:CallOnRemove("RemoveFrom_"..tostring(tbl), function()
+
         table.RemoveByValue(tbl, ent)
+        
     end)
 
 end
-
 
 
 --[[

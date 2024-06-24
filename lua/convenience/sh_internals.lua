@@ -22,7 +22,7 @@ if SERVER then
         local fname = args[1]
 
         if !fname then
-            fname = "convenience"
+            fname = "conv"
             MsgN("[CONV] Lib reload")
         end
 
