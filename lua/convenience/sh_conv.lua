@@ -59,3 +59,46 @@ end
 function conv.getSpawnMenuNPCs()
     return table.Copy(ents._SpawnMenuNPCs)
 end
+
+
+-- Create a wrapper function around the desired function
+-- 'preFunc' - Function to run before running the target function, passes the same arguments
+-- 'postFunc' - Code to run AFTER running the function, passes a table of return values followed by the function arguments,
+--  you can override the return values by returning something else in this function
+function conv.wrapFunc( uniqueID, func, preFunc, postFunc )
+    if !isfunction(func) then
+        error("The function does not exist!")
+    end
+
+
+    conv.wrapFunc_OriginalFuncs = conv.wrapFunc_OriginalFuncs or {}
+
+
+    if !conv.wrapFunc_OriginalFuncs[uniqueID] then
+        conv.wrapFunc_OriginalFuncs[uniqueID] = func
+    end
+
+
+    local wrappedFunc = function(...)
+        if isfunction(preFunc) then
+            preFunc( ... )
+        end
+
+
+        local returnValues = table.Pack( conv.wrapFunc_OriginalFuncs[uniqueID](...) )
+
+
+        if isfunction(postFunc) then
+            local returnValues = table.Pack( postFunc( returnValues, ... ) )
+
+            if !table.IsEmpty(returnValues) then
+                return unpack(returnValues)
+            end
+        end
+
+
+        return unpack(returnValues)
+    end
+
+    return wrappedFunc
+end
