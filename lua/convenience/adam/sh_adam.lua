@@ -34,11 +34,30 @@ end
 -- Checks if any player on the server can see this position right now
 function conv.playersSeePos( pos )
     for _, ply in player.Iterator() do
-        if ply:PosInView(pos) then
+        if conv.plyCanSeePos( ply, pos ) then
             return true
         end
     end
 end
+
+
+
+-- Checks if a player on the server can see this position right now
+function conv.plyCanSeePos( ply, pos )
+    local eyePos = ply:GetShootPos()
+    local eyeAngles = ply:EyeAngles()
+    local direction = (pos - eyePos):GetNormalized() -- Get the direction from player's eye to the position
+    local angleDifference = math.deg(math.acos(eyeAngles:Forward():Dot(direction))) -- Calculate angle difference
+
+    local tr = util.TraceLine({
+        start = eyePos,
+        endpos = pos,
+        mask = MASK_VISIBLE,
+    })
+
+    return angleDifference <= ply:GetFOV() && !tr.Hit
+end
+
 
 
 -- Debug Overlay QOL
