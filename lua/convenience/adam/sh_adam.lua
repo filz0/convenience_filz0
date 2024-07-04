@@ -53,12 +53,6 @@ function conv.overlay( funcname, argsFunc )
 end
 
 
--- DEPRECATED
-function conv.getSpawnMenuNPCs()
-    return table.Copy(ents._SpawnMenuNPCs)
-end
-
-
 -- Create a wrapper function around the desired function
 -- 'preFunc' - Function to run before running the target function, passes the same arguments
 -- 'postFunc' - Code to run AFTER running the function, passes a table of return values followed by the function arguments,

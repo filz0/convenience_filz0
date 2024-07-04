@@ -111,3 +111,8 @@ function ents.GetInfo( cls, func )
     end, ent)
 
 end
+
+
+function conv.getSpawnMenuNPCs()
+    return table.Copy(ents._SpawnMenuNPCs)
+end
