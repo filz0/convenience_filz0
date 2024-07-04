@@ -1,7 +1,6 @@
 # CONV
-My GLua library for Gmod.
+My GLua library for Gmod. Also known as "Zippy's Library".
 
 ### Todo
-- [ ] Separate deprecated functions into new files
 - [ ] Create a convinient command that manually runs lua files
-- [ ] Create conv.funcWrapper
+- [x] Create conv.funcWrapper

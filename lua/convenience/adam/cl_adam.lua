@@ -1,6 +1,3 @@
-// 'CONV' - Just a bunch of general convenient functions
-
-
 -- Create a simple derma frame
 function conv.dermaFrame( title, width, height )
     local frame = vgui.Create("DFrame")

@@ -38,11 +38,13 @@
 
 --[[
 ==================================================================================================
-                    INCLUDE FILES
+                    ADDON TEMPLATE
 ==================================================================================================
 --]]
 
 
+conv = conv or {} -- Your addon table here
+local addonName = "Zippy's Library" -- Your addon name here
 local rootDirectory = "convenience" -- Your directory here
 
 
@@ -76,6 +78,7 @@ local function IncludeDir( directory )
 
 	for _, v in ipairs( files ) do
 		if string.EndsWith( v, ".lua" ) then
+			print("["..addonName.."] Adding file '"..directory..v.."'!")
 			AddFile( v, directory )
 		end
 	end

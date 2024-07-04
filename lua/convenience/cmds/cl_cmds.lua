@@ -1,6 +1,3 @@
-// Commands created with concommand.Add
-
-
 -- Strip the players weapons and ammo on server from client
 concommand.Add("conv_strip", function(ply, cmd, args)
     net.Start("ConvStrip")

@@ -1,8 +1,6 @@
 local Developer = GetConVar("developer")
 
 
-// 'CONV' - Just a bunch of general convenient functions
-
 
 -- Do something next tick/frame
 function conv.callNextTick( func, ... )
