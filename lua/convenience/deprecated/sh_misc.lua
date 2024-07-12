@@ -1,8 +1,8 @@
+// DEPRECATED
+
+
 local Developer = GetConVar("developer")
 local MaxAmmoCvar = GetConVar("gmod_maxammo")
-
-
-// Miscellaneous
 
 
 --[[

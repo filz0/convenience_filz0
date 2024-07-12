@@ -1,4 +1,5 @@
-// 'ENTS' library extensions
+// DEPRECATED
+
 
 -- Spawn a NPC from the spawn menu
 function ents.CreateSpawnMenuNPC( SpawnMenuClass, pos, wep )
@@ -109,4 +110,9 @@ function ents.GetInfo( cls, func )
         Ent:Remove()
     end, ent)
 
+end
+
+
+function conv.getSpawnMenuNPCs()
+    return table.Copy(ents._SpawnMenuNPCs)
 end

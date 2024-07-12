@@ -1,55 +1,27 @@
 --[[
 ==================================================================================================
-                    THE LIBRARY
+                    CONV AUTORUN
 ==================================================================================================
 --]]
 
+conv = conv or {}
 
-conv = {}
+AddCSLuaFile("conv/cl.lua")
+AddCSLuaFile("conv/sh.lua")
 
-
---[[
-==================================================================================================
-                    INCLUDE FILES
-==================================================================================================
---]]
-
-
-local function IncludeFiles()
-
-    local files = file.Find("convenience/*", "LUA")
-
-    -- Might serve as backwards compatability...
-    AddCSLuaFile("convenience/adam.lua")
-    include("convenience/adam.lua")
-
-
-    for _, filename in ipairs(files) do
-        filepathname = "convenience/"..filename
-        if string.StartsWith(filename, "cl_") then
-
-            AddCSLuaFile(filepathname)
-
-            if CLIENT then
-                include(filepathname)
-            end
-
-        elseif string.StartsWith(filename, "sh_") then
-
-            AddCSLuaFile(filepathname)
-            include(filepathname)
-
-        elseif string.StartsWith(filename, "sv_") && SERVER then
-
-            include(filepathname)
-
-        end
-    end
+if CLIENT then
+	include("conv/cl.lua")
 end
 
+include("conv/sh.lua")
 
-IncludeFiles()
+if SERVER then
+	include("conv/sv.lua")
+end
 
+conv.includeDir("convenience")
+
+MsgN("Zippy's library loaded!")
 
 --[[
 ==================================================================================================
@@ -80,7 +52,7 @@ IncludeFiles()
 --         label:Dock(BOTTOM)
 --         label:SetContentAlignment(5)  -- 5 corresponds to center alignment
 --     end
--- elseif SERVER && !file.Exists("autorun/conv_adam.lua", "LUA") then
+-- elseif SERVER && !file.Exists("autorun/conv.lua", "LUA") then
 --     -- Conv lib not on on server, send message to clients
 --     hook.Add("PlayerInitialSpawn", "convenienceerrormsg", function( ply )
 --         local sendstr = 'MissingConvMsg()'

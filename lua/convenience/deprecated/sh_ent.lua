@@ -1,9 +1,8 @@
+// DEPRECATED
+
+
 local ENT = FindMetaTable("Entity")
 local PLY = FindMetaTable("Player")
-
-
-// More entity methods
-
 
 -- Call a method for this ent next tick
 function ENT:CallNextTick( methodname, ... )
