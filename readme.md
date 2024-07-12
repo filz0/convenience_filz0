@@ -9,3 +9,6 @@ https://github.com/Zippy6666/convenience/blob/main/lua/conv/sv.lua
 
 ### Client
 https://github.com/Zippy6666/convenience/blob/main/lua/conv/cl.lua
+
+### TODO
+- [ ] Redo some deprecated functions.
