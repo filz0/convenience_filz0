@@ -86,25 +86,35 @@ end
 ==================================================================================================
 --]]
 
+
 function conv.addFile( File, directory )
 	local prefix = string.lower( string.Left( File, 3 ) )
-	if SERVER and prefix == "sv_" then
+    local isServerFile = (prefix == "sv_" or File=="sv.lua")
+    local isClientFile = (prefix == "cl_" or File=="cl.lua")
+    local isSharedFile = !isClientFile && !isServerFile
+
+	if isServerFile && SERVER then
 
 		include( directory .. File )
+        return
+    
+    end
 
-	elseif prefix == "sh_" then
 
-		AddCSLuaFile( directory .. File )
-		include( directory .. File )
-
-	elseif prefix == "cl_" then
-
+    if isClientFile then
 		if SERVER then
 			AddCSLuaFile( directory .. File )
 		elseif CLIENT then
 			include( directory .. File )
 		end
 
+        return
+    end
+
+
+	if isSharedFile then
+		AddCSLuaFile( directory .. File )
+		include( directory .. File )
 	end
 end
 
