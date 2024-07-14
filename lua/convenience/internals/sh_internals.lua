@@ -9,8 +9,14 @@
 
 hook.Add("InitPostEntity", "CONV", function()
 
-     -- DEPRECATED
-    ents._SpawnMenuNPCs = list.Get("NPC") 
+    conv._SpawnMenuNPCs = list.Get("NPC")
+
+    if ZBaseInstalled then
+        table.Merge(conv._SpawnMenuNPCs, table.Copy(ZBaseNPCs))
+    end
+
+    -- Backwards compatability
+    ents._SpawnMenuNPCs = conv._SpawnMenuNPCs
 
 end)
 
