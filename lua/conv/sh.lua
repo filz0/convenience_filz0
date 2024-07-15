@@ -1,5 +1,6 @@
 local Developer = GetConVar("developer")
 local ENT = FindMetaTable("Entity")
+local SWEP = FindMetaTable("SWEP")
 
 
 --[[
@@ -266,4 +267,31 @@ function ENT:CONV_TempNetVar( funcName, value, duration )
         end
     end)
 
+end
+
+
+-- Like timer.Simple but with a built in valid check
+function ENT:CONV_TimerSimple(dur, func)
+
+    timer.Simple(dur, function()
+        if IsValid(self) then
+            func()
+        end
+    end)
+end
+
+
+-- Like timer.Create but with a built in valid check
+-- Also automatically concatinates the name with the entity's entity index
+function ENT:CONV_TimerCreate(name, dur, reps, func)
+    local timerName = name..self:EntIndex()
+
+    timer.Create(timerName, dur, reps, function()
+        if !IsValid(self) then
+            timer.Remove(timerName)
+            return
+        end
+
+        func()
+    end)
 end
