@@ -49,9 +49,8 @@ function conv.wrapFunc( uniqueID, func, preFunc, postFunc )
     end
 
 
+    -- Store original func
     conv.wrapFunc_OriginalFuncs = conv.wrapFunc_OriginalFuncs or {}
-
-
     if !conv.wrapFunc_OriginalFuncs[uniqueID] then
         conv.wrapFunc_OriginalFuncs[uniqueID] = func
     end
@@ -61,7 +60,6 @@ function conv.wrapFunc( uniqueID, func, preFunc, postFunc )
         if isfunction(preFunc) then
             preFunc( ... )
         end
-
 
         local returnValues = table.Pack( conv.wrapFunc_OriginalFuncs[uniqueID](...) )
 
@@ -80,6 +78,37 @@ function conv.wrapFunc( uniqueID, func, preFunc, postFunc )
 
     return wrappedFunc
 end
+
+
+-- Same as above, but the original function is lost
+function conv.wrapFunc2( func, preFunc, postFunc )
+    if !isfunction(func) then
+        error("The function does not exist!")
+    end
+
+    local wrappedFunc = function(...)
+        if isfunction(preFunc) then
+            preFunc( ... )
+        end
+
+        local returnValues = table.Pack( func(...) )
+
+
+        if isfunction(postFunc) then
+            local returnValues = table.Pack( postFunc( returnValues, ... ) )
+
+            if !table.IsEmpty(returnValues) then
+                return unpack(returnValues)
+            end
+        end
+
+
+        return unpack(returnValues)
+    end
+
+    return wrappedFunc
+end
+
 
 --[[
 ==================================================================================================
