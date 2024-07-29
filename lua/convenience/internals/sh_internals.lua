@@ -21,6 +21,22 @@ hook.Add("InitPostEntity", "CONV", function()
 end)
 
 
+if CLIENT then
+
+    hook.Add("PopulateToolMenu", "CONV", function()
+
+        -- Populate tool menu
+        if istable(conv.toolMenuFuncs) then
+            for k, v in pairs(conv.toolMenuFuncs) do
+                spawnmenu.AddToolMenuOption(v.tab, v.cat, v.name, v.name "", "", v.func)
+            end
+        end
+
+    end)
+
+end
+
+
 --[[
 ==================================================================================================
                     NET CODE
