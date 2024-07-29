@@ -28,7 +28,7 @@ if CLIENT then
         -- Populate tool menu
         if istable(conv.toolMenuFuncs) then
             for k, v in pairs(conv.toolMenuFuncs) do
-                spawnmenu.AddToolMenuOption(v.tab, v.cat, v.name, v.name "", "", v.func)
+                spawnmenu.AddToolMenuOption(v.tab, v.cat, v.name, v.name, "", "", v.func)
             end
         end
 
