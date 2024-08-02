@@ -1,6 +1,5 @@
 local Developer = GetConVar("developer")
 local ENT = FindMetaTable("Entity")
-local SWEP = FindMetaTable("SWEP")
 
 
 --[[
