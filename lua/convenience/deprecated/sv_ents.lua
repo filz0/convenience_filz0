@@ -1,4 +1,4 @@
-// DEPRECATED
+// DEPRECATED, DO NOT USE
 
 
 -- Spawn a NPC from the spawn menu

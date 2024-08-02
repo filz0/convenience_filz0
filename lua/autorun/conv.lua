@@ -1,23 +1,3 @@
-conv = conv or {}
-
-AddCSLuaFile("conv/cl.lua")
-AddCSLuaFile("conv/sh.lua")
-
-if CLIENT then
-	include("conv/cl.lua")
-end
-
-include("conv/sh.lua")
-
-if SERVER then
-	include("conv/sv.lua")
-end
-
-conv.includeDir("convenience")
-
-MsgN("Zippy's library loaded!")
-
-
 --[[=========================== CONV MESSAGE START ===========================]]--
 -- MissingConvMsg2 = CLIENT && function()
 
@@ -46,3 +26,28 @@ MsgN("Zippy's library loaded!")
 
 -- end)
 --[[============================ CONV MESSAGE END ============================]]--
+
+
+conv = conv or {}
+
+
+AddCSLuaFile("conv/cl.lua")
+AddCSLuaFile("conv/sh.lua")
+
+
+if SERVER then
+	include("conv/sv.lua")
+	include("conv/sh.lua")
+end
+
+if CLIENT then
+	include("conv/cl.lua")
+	include("conv/sh.lua")
+end
+
+
+conv.includeDir("conv/internals")
+conv.includeDir("convenience")
+
+
+MsgN("Zippy's library loaded!")

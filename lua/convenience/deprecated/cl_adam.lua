@@ -1,4 +1,4 @@
-// DEPRECATED
+// DEPRECATED, DO NOT USE
 
 -- Create a simple derma frame
 function conv.dermaFrame( title, width, height )

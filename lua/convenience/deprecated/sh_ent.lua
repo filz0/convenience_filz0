@@ -1,4 +1,4 @@
-// DEPRECATED
+// DEPRECATED, DO NOT USE
 
 
 local ENT = FindMetaTable("Entity")

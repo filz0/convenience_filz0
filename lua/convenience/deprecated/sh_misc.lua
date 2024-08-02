@@ -1,4 +1,4 @@
-// DEPRECATED
+// DEPRECATED, DO NOT USE
 
 
 local Developer = GetConVar("developer")
