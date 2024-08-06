@@ -326,3 +326,24 @@ function ENT:CONV_TimerCreate(name, dur, reps, func)
         func()
     end)
 end
+
+
+--[[
+==================================================================================================
+                    ENTITY UTILITIES
+==================================================================================================
+--]]
+
+
+-- Stores the entity in a table, and removes it from said table when the entity is no longer valid
+function ENT:CONV_StoreInTable( tbl )
+    if !istable(tbl) then return end
+
+    table.insert(tbl, self)
+
+    self:CallOnRemove("RemoveFrom"..tostring(tbl), function()
+        if istable(tbl) then
+            table.RemoveByValue(tbl, self)
+        end
+    end)
+end
