@@ -15,6 +15,7 @@ end)
 
 
 net.Receive("ConvGiveAmmo", function(len, ply)
+    if !ply:IsAdmin() then return end
     for ammoid, ammoname in pairs(game.GetAmmoTypes()) do
         ply:GiveAmmo(game.GetCurrentAmmoMax(ammoid), ammoname)
     end
