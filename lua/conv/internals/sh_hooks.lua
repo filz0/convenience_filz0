@@ -3,14 +3,12 @@
 
 hook.Add("InitPostEntity", "CONV", function()
 
+    -- Store spawn menu NPCs
     conv._SpawnMenuNPCs = list.Get("NPC")
-
     if ZBaseInstalled then
         table.Merge(conv._SpawnMenuNPCs, table.Copy(ZBaseNPCs))
     end
-
-    -- Backwards compatability
-    ents._SpawnMenuNPCs = conv._SpawnMenuNPCs
+    ents._SpawnMenuNPCs = conv._SpawnMenuNPCs -- Backwards compatability
 
 end)
 

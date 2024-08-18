@@ -118,3 +118,24 @@ function conv.getEntInfo( cls, func )
     end, ent)
 
 end
+
+
+--[[
+==================================================================================================
+                    NETWORKING
+==================================================================================================
+--]]
+
+
+-- Needs to be tested, do not use.
+function ENT:CONV_Broadcast( func )
+
+    func()
+    net.Broadcast()
+    
+    table.insert(conv._NetFuncsToSendJoiningPlayers, func)
+    self:CallOnRemove("RemoveNetFunc: "..tostring(func), function()
+        table.RemoveByValue(conv._NetFuncsToSendJoiningPlayers, func)
+    end)
+
+end
