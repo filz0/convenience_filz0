@@ -50,7 +50,7 @@ end
 -- Create a wrapper function around the desired function
 -- 'preFunc' - Function to run before running the target function, passes the same arguments
 -- 'postFunc' - Code to run AFTER running the function, passes a table of return values followed by the function arguments,
---  you can override the return values by returning something else in this function
+--  You can override the return values by returning something else in either of the functions
 function conv.wrapFunc( uniqueID, func, preFunc, postFunc )
     if !isfunction(func) then
         error("The function does not exist!")
@@ -66,17 +66,21 @@ function conv.wrapFunc( uniqueID, func, preFunc, postFunc )
 
     local wrappedFunc = function(...)
         if isfunction(preFunc) then
-            preFunc( ... )
+            local returnValuesPre = preFunc( ... )
+
+            if !table.IsEmpty(returnValuesPre) then
+                return unpack(returnValuesPre)
+            end
         end
 
         local returnValues = table.Pack( conv.wrapFunc_OriginalFuncs[uniqueID](...) )
 
 
         if isfunction(postFunc) then
-            local returnValues = table.Pack( postFunc( returnValues, ... ) )
+            local returnValuesPost = table.Pack( postFunc( returnValues, ... ) )
 
-            if !table.IsEmpty(returnValues) then
-                return unpack(returnValues)
+            if !table.IsEmpty(returnValuesPost) then
+                return unpack(returnValuesPost)
             end
         end
 
