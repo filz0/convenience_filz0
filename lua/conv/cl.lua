@@ -19,11 +19,11 @@ concommand.Add("conv_giveammo", function(ply, cmd, args)
 end)
 
 
--- Give ammo to all weapons for a player, needs admin
+-- Show information about the player's weapons, useful when they have fast switch enabled
 concommand.Add("conv_checkweapons", function(ply, cmd, args)
     local weps = ply:GetWeapons()
 
-    notification.AddLegacy( "You have "..#weps.." weapons.", NOTIFY_HINT, 5 )
+    notification.AddLegacy( "You currently have "..#weps.." weapons in your inventory", NOTIFY_HINT, 5 )
 
     local weapon_slotmap = {}
     for _, wep in ipairs(weps) do
