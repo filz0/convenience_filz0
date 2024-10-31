@@ -18,6 +18,25 @@ concommand.Add("conv_giveammo", function(ply, cmd, args)
     net.SendToServer()
 end)
 
+
+-- Give ammo to all weapons for a player, needs admin
+concommand.Add("conv_checkweapons", function(ply, cmd, args)
+    local weps = ply:GetWeapons()
+
+    notification.AddLegacy( "You have "..#weps.." weapons.", NOTIFY_HINT, 5 )
+
+    local weapon_slotmap = {}
+    for _, wep in ipairs(weps) do
+
+        weapon_slotmap["SLOT "..wep:GetSlot()] = weapon_slotmap["SLOT "..wep:GetSlot()] or {}
+        table.insert(weapon_slotmap["SLOT "..wep:GetSlot()], wep.PrintName && language.GetPhrase(wep.PrintName) or wep:GetClass())
+
+    end
+
+    PrintTable(weapon_slotmap)
+end)
+
+
 --[[
 ==================================================================================================
                     TOOL MENU
