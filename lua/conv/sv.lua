@@ -132,10 +132,22 @@ function ENT:CONV_Broadcast( func )
 
     func()
     net.Broadcast()
-    
+
     table.insert(conv._NetFuncsToSendJoiningPlayers, func)
     self:CallOnRemove("RemoveNetFunc: "..tostring(func), function()
         table.RemoveByValue(conv._NetFuncsToSendJoiningPlayers, func)
     end)
 
+end
+
+function ENT:CONV_SetSpawnFlags(...)
+    self:SetKeyValue("spawnflags", bit.bor(...))
+end
+
+function ENT:CONV_AddSpawnFlags(...)
+    self:SetKeyValue("spawnflags", bit.bor(self:GetSpawnFlags(), ...))
+end
+
+function ENT:CONV_RemoveSpawnFlags(...)
+    self:SetKeyValue("spawnflags", bit.band(self:GetSpawnFlags(), bit.bnot(...)))
 end
