@@ -18,7 +18,7 @@ function conv.callNextTick( func, ... )
         func(unpack(argtbl))
     end)
 
-end
+end 
 
 
 -- Do something after a certain amount of ticks/frames
@@ -182,6 +182,14 @@ end
                     DEBUG
 ==================================================================================================
 --]]
+
+
+-- Prints but only if "developer" is more than 1
+function conv.devPrint(...)
+    if Developer:GetInt() >= 1 then
+        print(...)
+    end
+end
 
 
 -- Debug Overlay QOL
