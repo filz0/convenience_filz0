@@ -187,7 +187,7 @@ end
 -- Prints but only if "developer" is more than 1
 function conv.devPrint(...)
     if Developer:GetInt() >= 1 then
-        MsgC(...)
+        MsgC(..., "\n")
     end
 end
 
