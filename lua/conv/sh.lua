@@ -185,10 +185,34 @@ end
 
 
 -- Prints but only if "developer" is more than 1
+-- Also prints to all SuperAdmins on dedicated servers
 function conv.devPrint(...)
-    if Developer:GetInt() >= 1 then
-        MsgC(..., "\n")
+    if Developer:GetInt() < 1 then return end
+
+    if SERVER && game.IsDedicated() then
+        for _, superadmin in player.Iterator() do
+            if superadmin:IsSuperAdmin() then
+                local clprintStr = ""
+                local clColStr = ""
+
+                for _, v in ipairs(table.Pack(...)) do
+                    if IsColor(v) then
+                        clColStr = "Color("..v.r..", "..v.g..", "..v.b.."), "
+                        continue 
+                    end
+
+                    clprintStr = clprintStr..tostring(v)
+                end
+
+                local LuaSend = 'MsgC( '..clColStr..'"'..clprintStr..'" ) MsgN()'
+
+                superadmin:SendLua( LuaSend )
+            end
+        end
     end
+
+    MsgC(...)
+    MsgN()
 end
 
 
