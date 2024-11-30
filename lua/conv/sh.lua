@@ -192,7 +192,7 @@ function conv.devPrint(...)
     if SERVER && game.IsDedicated() then
         for _, superadmin in player.Iterator() do
             if superadmin:IsSuperAdmin() then
-                local clprintStr = ""
+                local clprintStr = "[SERVER] "
                 local clColStr = ""
 
                 for _, v in ipairs(table.Pack(...)) do
@@ -209,6 +209,20 @@ function conv.devPrint(...)
                 superadmin:SendLua( LuaSend )
             end
         end
+    end
+
+    local args = table.Pack(...)
+    local foundCol = false
+    for _, arg in ipairs(args) do
+        if IsColor(arg) then
+            MsgC(arg, SERVER && "[SERVER] " or "[CLIENT] ")
+            foundCol = true
+            break
+        end
+    end
+
+    if !foundCol then
+        MsgC(SERVER && "[SERVER] " or "[CLIENT] ")
     end
 
     MsgC(...)
