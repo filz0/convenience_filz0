@@ -64,16 +64,22 @@ function conv.wrapFunc( uniqueID, func, preFunc, postFunc )
     end
 
 
+    local ogfunc = conv.wrapFunc_OriginalFuncs[uniqueID]
+    if !isfunction(ogfunc) then
+        return -- Func was removed?
+    end
+
+
     local wrappedFunc = function(...)
         if isfunction(preFunc) then
             local returnValuesPre = preFunc( ... )
 
-            if !table.IsEmpty(returnValuesPre) then
+            if istable(returnValuesPre) && !table.IsEmpty(returnValuesPre) then
                 return unpack(returnValuesPre)
             end
         end
 
-        local returnValues = table.Pack( conv.wrapFunc_OriginalFuncs[uniqueID](...) )
+        local returnValues = table.Pack( ogfunc(...) )
 
 
         if isfunction(postFunc) then
