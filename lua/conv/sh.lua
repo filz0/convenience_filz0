@@ -193,7 +193,7 @@ end
 -- Prints but only if "developer" is more than 1
 -- Also prints to all SuperAdmins on dedicated servers
 function conv.devPrint(...)
-    if Developer:GetInt() < 1 then return end
+    if Developer:GetInt() < 1 && !(SERVER && game.IsDedicated()) then return end
 
     if SERVER && game.IsDedicated() then
         for _, superadmin in player.Iterator() do
@@ -235,6 +235,8 @@ function conv.devPrint(...)
     MsgN()
 end
 
+
+conv.devPrint("Your mom.")
 
 -- Debug Overlay QOL
 -- https://wiki.facepunch.com/gmod/debugoverlay
