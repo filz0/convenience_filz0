@@ -359,29 +359,32 @@ function ENT:CONV_TempNetVar( funcName, value, duration )
 end
 
 
--- Like timer.Simple but with a built in valid check
-function ENT:CONV_TimerSimple(dur, func)
+-- Like timer.Simple but with a built in valid check and varargs
+function ENT:CONV_TimerSimple(dur, func, ...)
+
+    local args = table.Pack(...)
 
     timer.Simple(dur, function()
         if IsValid(self) then
-            func()
+            func(unpack(args))
         end
     end)
 end
 
 
--- Like timer.Create but with a built in valid check
+-- Like timer.Create but with a built in valid check and varargs
 -- Also automatically concatinates the name with the entity's entity index
-function ENT:CONV_TimerCreate(name, dur, reps, func)
+function ENT:CONV_TimerCreate(name, dur, reps, func, ...)
     local timerName = name..self:EntIndex()
-
+    local args = table.Pack(...)
+    
     timer.Create(timerName, dur, reps, function()
         if !IsValid(self) then
             timer.Remove(timerName)
             return
         end
 
-        func()
+        func(unpack(args))
     end)
 end
 
