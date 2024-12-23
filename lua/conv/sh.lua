@@ -408,3 +408,25 @@ function ENT:CONV_StoreInTable( tbl )
         end
     end)
 end
+
+
+-- Adds a hook for this entity that terminates once it is no longer valid
+-- 'Type' is the type of hook, such as "Think"
+-- 'func' is the function to run in the hook. First argument is 'self'.
+-- 'name' is optional and allows multiple hooks of the same type to be added to the ent (if they have different names)
+function ENT:CONV_AddHook( Type, func, name )
+    local id = "CONV_EntityHook_"..self:EntIndex().."_"..Type
+    if name then id = id .. name end
+
+    hook.Add(Type, id, function(...)
+        if !IsValid(self) then
+            return
+        end
+
+        func(self, ...)
+    end)
+
+    self:CallOnRemove("CONV_RemoveHook_"..id, function()
+        hook.Remove(Type, id)
+    end)
+end
