@@ -410,6 +410,22 @@ function ENT:CONV_StoreInTable( tbl )
 end
 
 
+-- Maps the entity to a table where itself is used as a key
+-- Removes itself from said table when no longer valid
+-- 'Value' is optional and is 'true' by default
+function ENT:CONV_MapInTable( tbl, value )
+    if !istable(tbl) then return end
+
+    tbl[self] = ( value or true )
+
+    self:CallOnRemove("RemoveMappedFrom"..tostring(tbl), function()
+        if istable(tbl) then
+            tbl[self] = nil
+        end
+    end)
+end
+
+
 -- Adds a hook for this entity that terminates once it is no longer valid
 -- 'Type' is the type of hook, such as "Think"
 -- 'func' is the function to run in the hook. First argument is 'self'.
