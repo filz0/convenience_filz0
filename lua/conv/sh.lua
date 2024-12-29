@@ -38,6 +38,19 @@ function conv.callAfterTicks( ticknum, func, ... )
 end
 
 
+-- An ipairs for loop that runs the code every tick
+-- 'func' sends key and value as arguments
+-- Example:
+-- conv.tickForEach( tbl, function(k, v)
+--     print(k, v)
+-- end)
+-- Slow and useless maybe idk lol
+function conv.tickForEach( tbl, func )
+    for k, v in ipairs(tbl) do
+        conv.callAfterTicks( k, func, k, v )
+    end
+end
+
 
 --[[
 ==================================================================================================
@@ -235,8 +248,6 @@ function conv.devPrint(...)
     MsgN()
 end
 
-
-conv.devPrint("Your mom.")
 
 -- Debug Overlay QOL
 -- https://wiki.facepunch.com/gmod/debugoverlay
