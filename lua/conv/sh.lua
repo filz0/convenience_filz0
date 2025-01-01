@@ -332,19 +332,24 @@ end
 
 
 -- Temporarily set a variable on an entity
+-- This assumes the variable does not exist currently, so it will be nil after 'duration'
 function ENT:CONV_TempVar( name, value, duration )
 
-    self[name.."ValBefore"] = self[name.."ValBefore"] or self[name]
     self[name] = value
-
 
     timer.Create("TempVar"..name..self:EntIndex(), duration, 1, function()
         if IsValid(self) then
-            self[name] = ValBefore
-            self[name.."ValBefore"] = nil
+            self[name] = nil
         end
     end)
 
+end
+
+
+-- Remove a temporary variable
+function ENT:CONV_RemoveTempVar( name )
+    timer.Remove("TempVar"..name..self:EntIndex())
+    self[name] = nil
 end
 
 
