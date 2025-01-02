@@ -59,7 +59,6 @@ end
 --]]
 
 
-
 -- Create a wrapper function around the desired function
 -- 'preFunc' - Function to run before running the target function, passes the same arguments
 -- 'postFunc' - Code to run AFTER running the function, passes a table of return values followed by the function arguments,
@@ -85,7 +84,7 @@ function conv.wrapFunc( uniqueID, func, preFunc, postFunc )
 
     local wrappedFunc = function(...)
         if isfunction(preFunc) then
-            local returnValuesPre = preFunc( ... )
+            local returnValuesPre = table.Pack( preFunc( ... ) )
 
             if istable(returnValuesPre) && !table.IsEmpty(returnValuesPre) then
                 return unpack(returnValuesPre)
