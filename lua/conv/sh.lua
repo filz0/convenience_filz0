@@ -404,6 +404,12 @@ function ENT:CONV_TimerCreate(name, dur, reps, func, ...)
 end
 
 
+-- Like timer.Remove but automatically concatinates the name with the entity's entity index
+function ENT:CONV_TimerRemove(name)
+    timer.Remove(name..self:EntIndex())
+end
+
+
 --[[
 ==================================================================================================
                     ENTITY UTILITIES
