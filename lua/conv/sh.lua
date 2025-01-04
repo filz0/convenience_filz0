@@ -478,6 +478,6 @@ end
 
 
 -- Checks if the NPC has a certain capability
-function NPC:CONV_HasCapabiltity( cap )
+function NPC:CONV_HasCapability( cap )
     return bit.band(self:CapabilitiesGet(), cap) == cap
 end
