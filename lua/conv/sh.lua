@@ -1,5 +1,6 @@
 local Developer = GetConVar("developer")
 local ENT = FindMetaTable("Entity")
+local NPC = FindMetaTable("NPC")
 
 
 --[[
@@ -466,4 +467,17 @@ function ENT:CONV_AddHook( Type, func, name )
     self:CallOnRemove("CONV_RemoveHook_"..id, function()
         hook.Remove(Type, id)
     end)
+end
+
+
+--[[
+==================================================================================================
+                    NPC UTILITIES
+==================================================================================================
+--]]
+
+
+-- Checks if the NPC has a certain capability
+function NPC:CONV_HasCapabiltity( cap )
+    return bit.band(self:CapabilitiesGet(), cap) == cap
 end
