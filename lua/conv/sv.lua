@@ -9,7 +9,7 @@ local ENT = FindMetaTable("Entity")
 
 
 -- Spawn a NPC from the spawn menu
-function conv.createSpawnMenuNPC( SpawnMenuClass, pos, wep )
+function conv.createSpawnMenuNPC( SpawnMenuClass, pos, wep, beforeSpawnFunc )
 
 
     -- Find NPC in spawn menu
@@ -87,6 +87,11 @@ function conv.createSpawnMenuNPC( SpawnMenuClass, pos, wep )
     if SpawnMenuTable.SpawnFlags then NPC:SetKeyValue("spawnflags", SpawnMenuTable.SpawnFlags) end
 
 
+    if isfunction(beforeSpawnFunc) then
+        beforeSpawnFunc( NPC )
+    end
+
+    
     -- Spawn and Activate
     NPC:Spawn()
     NPC:Activate()
