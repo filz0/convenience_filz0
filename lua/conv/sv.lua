@@ -7,7 +7,6 @@ local ENT = FindMetaTable("Entity")
 ==================================================================================================
 --]]
 
-
 -- Spawn a NPC from the spawn menu
 function conv.createSpawnMenuNPC( SpawnMenuClass, pos, wep, beforeSpawnFunc )
 
@@ -17,16 +16,8 @@ function conv.createSpawnMenuNPC( SpawnMenuClass, pos, wep, beforeSpawnFunc )
 
 
     -- Check if zbase npc
-    local zbasetable
-    if ZBaseInstalled then
-        zbasetable = ZBaseNPCs[SpawnMenuClass]
-    end
-    local isZBaseNPC = false
-    if istable(zbasetable) then
-        SpawnMenuTable = zbasetable
-        isZBaseNPC = true
-    end
-
+    local isZBaseNPC = ZBaseInstalled && ZBaseNPCs[SpawnMenuClass]
+    
 
     -- No such NPC
     if !SpawnMenuTable then
@@ -35,18 +26,8 @@ function conv.createSpawnMenuNPC( SpawnMenuClass, pos, wep, beforeSpawnFunc )
     end
 
 
-    -- Is ZBase NPC, do ZBase NPC spawn
-    if isZBaseNPC then
-
-        -- Stop here
-        wep = wep or "default"
-        return ZBaseSpawnZBaseNPC( SpawnMenuClass, pos, nil, wep)
-
-    end
-
-
     -- Create NPC
-    local NPC = ents.Create( SpawnMenuTable.Class )
+    local NPC = ents.Create( isZBaseNPC && SpawnMenuClass or SpawnMenuTable.Class )
 
 
     -- No such NPC
