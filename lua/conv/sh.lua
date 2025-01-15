@@ -317,17 +317,20 @@ end
 
 
 -- Call a method for this ent next tick
-function ENT:CONV_CallNextTick( methodname, ... )
-
+function ENT:CONV_CallNextTick( methodnameorfunc, ... )
     local function func( me, ... )
-        if IsValid(me) then
-            me[methodname](me, ...)
+        if !IsValid(me) then return end
+        
+        if isstring(methodnameorfunc) then
+            me[methodnameorfunc](me, ...)
+        elseif isfunction(methodnameorfunc) then
+            methodnameorfunc(...)
+        else
+            error("Invalid type in CONV_CallNextTick.")
         end
     end
 
-
     conv.callNextTick( func, self, ... )
-
 end
 
 
