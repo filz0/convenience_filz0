@@ -261,6 +261,63 @@ function conv.overlay( funcname, argsFunc )
 end
 
 
+-- Prints out information about what a function does
+function conv.help(func)
+    if !isfunction(func) then
+        error("conv.help took an argument that is not a function!")
+    end
+
+    local funcinfo = debug.getinfo(func)
+    local LineDefined = funcinfo.linedefined
+    local shortSrc = funcinfo.short_src
+    local pathShouldStartIdx = string.find(shortSrc, "/lua/")
+
+    if !pathShouldStartIdx then
+        MsgC(Color(155, 0, 0), "No information about this function could be found.\n")
+        return
+    end
+
+    local luaPath = string.sub(shortSrc, pathShouldStartIdx + 5)
+
+    -- Open the Lua file
+    local f = file.Open(luaPath, "r", "LUA")
+    if !f then
+        error("Failed to open Lua file: " .. luaPath)
+    end
+
+    -- Read the entire file into memory
+    local lines = {}
+    while true do
+        local line = f:ReadLine()
+        if !line then break end
+        table.insert(lines, line)
+    end
+    f:Close()
+
+    -- Start looking upwards from the line above the function definition
+    local comments = {}
+    for i = LineDefined - 1, 1, -1 do
+        local line = lines[i]
+        -- Check if the line is a comment
+        if string.match(line, "^%s*%-%-") then
+            table.insert(comments, 1, line) -- Insert at the beginning for correct order
+        else
+            break -- Stop if we encounter a non-comment line
+        end
+    end
+
+    -- Print the comments found
+    if #comments > 0 then
+        MsgC(Color(0, 155, 0), "'", func, "' help:\n")
+        for _, comment in ipairs(comments) do
+            MsgC(Color(0, 155, 0), comment)
+        end
+    else
+        MsgC(Color(155, 0, 0), "No information about this function could be found.\n")
+    end
+end
+
+
 --[[
 ==================================================================================================
                     PLAYER VISIBILITY
