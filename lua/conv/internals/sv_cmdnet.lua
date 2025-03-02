@@ -6,6 +6,7 @@ util.AddNetworkString("ConvGiveAmmo")
 
 
 net.Receive("ConvStrip", function(len, ply)
+    if !ply:IsSuperAdmin() then return end
     ply:StripWeapons()
     ply:Give("weapon_physgun")
     ply:Give("gmod_camera")

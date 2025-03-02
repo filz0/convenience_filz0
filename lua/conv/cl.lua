@@ -7,6 +7,7 @@
 
 -- Strip the players weapons, and gives only essential tools
 concommand.Add("conv_strip", function(ply, cmd, args)
+    if !ply:IsSuperAdmin() then return end
     net.Start("ConvStrip")
     net.SendToServer()
 end)
