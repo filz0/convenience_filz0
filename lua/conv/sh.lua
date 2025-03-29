@@ -379,6 +379,24 @@ function conv.thisEntOrWorld( ent )
 end
 
 
+-- Send a hint to the player's hud
+-- 'ply' - The player
+-- 'strMsg' - The message
+-- 'iType' - Type: https://wiki.facepunch.com/gmod/Enums/NOTIFY
+-- 'fLen' - Display duration
+function conv.sendGModHint( ply, strMsg, iType, fLen )
+    if CLIENT then
+        notification.AddLegacy(strMsg, iType, fLen)
+    elseif SERVER then
+        net.Start("CONV_SendGModHint")
+        net.WriteString(strMsg)
+        net.WriteUInt(iType, 3)
+        net.WriteFloat(fLen)
+        net.Send(ply)
+    end
+end
+
+
 --[[
 ==================================================================================================
                     ENTITY TIMER / TICK FUNCTIONS
