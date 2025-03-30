@@ -16,6 +16,7 @@ end)
 
 if CLIENT then
 
+    -- Conv tool menu thing
     hook.Add("PopulateToolMenu", "CONV", function()
         if istable(conv.toolMenuFuncs) then
             for k, v in pairs(conv.toolMenuFuncs) do

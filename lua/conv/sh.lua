@@ -365,6 +365,69 @@ function conv.getSpawnMenuNPCs()
 end
 
 
+--[[
+==================================================================================================
+                    COMMUNICATION / INFO / TEXT / HINT / HELP UTILITIES
+==================================================================================================
+--]]
+
+
+-- "pos"        - The position to display the text at
+-- "strText"    - The text to show
+-- "col"        - The color to use
+-- "fSize"      - The size of the text
+-- 'fDuration'  - Display duration
+-- 'tblPlayers' - A table of players to send this message to (server only, if empty, broadcast)
+function conv.display3DText( pos, strText, col, fSize, fDuration, tblPlayers )
+    if CLIENT then
+        conv._createText( pos, strText, col, fSize, fDuration, tblPlayers )
+    elseif SERVER then
+        net.Start("CONV_Create3DText")
+        net.WriteVector(pos)
+        net.WriteString(strText)
+        net.WriteColor(col)
+        net.WriteFloat(fSize)
+        net.WriteFloat(fDuration)
+
+        if istable(tblPlayers) && !table.IsEmpty(tblPlayers) then
+            local bSendOneMsg = false
+
+            for _, ply in ipairs(tblPlayers) do
+                if !IsValid(ply) then continue end
+                if !ply:IsPlayer() then continue end
+                
+                net.Send(ply)
+                bSentOneMsg = true
+            end
+
+            -- No message sent, broadcast so we dont break net code
+            if !bSendOneMsg then
+                net.Broadcast()
+            end
+        else
+            net.Broadcast()
+        end
+    end
+end
+
+
+-- Send a hint to the player's hud
+-- 'ply'        - The player
+-- 'strMsg'     - The message
+-- 'iType'      - Type: https://wiki.facepunch.com/gmod/Enums/NOTIFY
+-- 'fDuration'  - Display duration
+function conv.sendGModHint( ply, strMsg, iType, fDuration )
+    if CLIENT then
+        notification.AddLegacy(strMsg, iType, fDuration)
+    elseif SERVER then
+        net.Start("CONV_SendGModHint")
+        net.WriteString(strMsg)
+        net.WriteUInt(iType, 3)
+        net.WriteFloat(fDuration)
+        net.Send(ply)
+    end
+end
+
 
 --[[
 ==================================================================================================
@@ -373,27 +436,10 @@ end
 --]]
 
 
+
 function conv.thisEntOrWorld( ent )
     if !IsValid(ent) then return game.GetWorld() end
     return ent
-end
-
-
--- Send a hint to the player's hud
--- 'ply' - The player
--- 'strMsg' - The message
--- 'iType' - Type: https://wiki.facepunch.com/gmod/Enums/NOTIFY
--- 'fLen' - Display duration
-function conv.sendGModHint( ply, strMsg, iType, fLen )
-    if CLIENT then
-        notification.AddLegacy(strMsg, iType, fLen)
-    elseif SERVER then
-        net.Start("CONV_SendGModHint")
-        net.WriteString(strMsg)
-        net.WriteUInt(iType, 3)
-        net.WriteFloat(fLen)
-        net.Send(ply)
-    end
 end
 
 
@@ -402,7 +448,6 @@ end
                     ENTITY TIMER / TICK FUNCTIONS
 ==================================================================================================
 --]]
-
 
 
 -- Call a method for this ent next tick
