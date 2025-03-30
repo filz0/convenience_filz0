@@ -372,42 +372,60 @@ end
 --]]
 
 
--- "pos"        - The position to display the text at
--- "strText"    - The text to show
--- "col"        - The color to use
--- "fSize"      - The size of the text
--- 'fDuration'  - Display duration
--- 'tblPlayers' - A table of players to send this message to (server only, if empty, broadcast)
-function conv.display3DText( pos, strText, col, fSize, fDuration, tblPlayers )
-    if CLIENT then
-        conv._createText( pos, strText, col, fSize, fDuration, tblPlayers )
-    elseif SERVER then
-        net.Start("CONV_Create3DText")
-        net.WriteVector(pos)
-        net.WriteString(strText)
-        net.WriteColor(col)
-        net.WriteFloat(fSize)
-        net.WriteFloat(fDuration)
-
-        if istable(tblPlayers) && !table.IsEmpty(tblPlayers) then
-            local bSendOneMsg = false
-
-            for _, ply in ipairs(tblPlayers) do
-                if !IsValid(ply) then continue end
-                if !ply:IsPlayer() then continue end
-                
-                net.Send(ply)
-                bSentOneMsg = true
-            end
-
-            -- No message sent, broadcast so we dont break net code
-            if !bSendOneMsg then
-                net.Broadcast()
-            end
-        else
-            net.Broadcast()
-        end
+-- "strID"      -   Unique identifier for this text, 
+--                  if another text with this ID is created, the old one will simply be updated
+--                  with the new attributes. ID:s are not synced between client and server.
+-- "pos"        -   The position to display the text at
+-- 'fDuration'  -   Display duration
+-- The following parameters should not be updated excessively:
+-- "strText"    -   The text to show
+-- "col"        -   The color to use
+-- "fSize"      -   The size of the text
+function conv.display3DText( strID, pos, fDuration, strText, col, fSize )
+    if !isstring(strID) then
+        error("Invalid ID for text!")
     end
+
+    local text = conv._3dTexts[strID]
+
+    if IsValid(text) then
+        -- Update old text
+
+        text:SetPos(pos)
+
+        if isstring(strText) && strText     != text:GetstrText() then   text:SetstrText(strText) end
+        if isnumber(fSize) && fSize         != text:GetfSize() then     text:SetfSize(fSize) end
+
+        -- Don't update color every microsecond pls it will be unoptimized
+        if IsColor(col) then text:SetvecColor(col:ToVector()) end
+
+        text:resetRemoveTimer(fDuration)
+    else
+        -- Create new text
+        text = (SERVER && ents.Create("conv_text")) or (CLIENT && ents.CreateClientside("conv_text"))
+        
+        if !IsValid(text) then
+            error("Failed to create text entity!")
+        end
+
+        text:CONV_MapInTable(conv._3dTexts, text, strID)
+
+        text:SetPos(pos)
+        text:SetstrText(strText)
+        text:SetfSize(fSize)
+        text:SetvecColor(col:ToVector())
+        text:Spawn()
+        text:resetRemoveTimer(fDuration)
+    end
+end
+
+-- Removes a 3D text created with display3DText
+-- "strID"      -   Unique identifier for the text
+function conv.remove3DText(strID)
+    if !isstring(strID) then
+        error("Invalid ID for text!")
+    end
+    SafeRemoveEntity(conv._3dTexts[strID])
 end
 
 
@@ -570,16 +588,22 @@ end
 
 
 -- Maps the entity to a table where itself is used as a key
--- Removes itself from said table when no longer valid
--- 'Value' is optional and is 'true' by default
-function ENT:CONV_MapInTable( tbl, value )
-    if !istable(tbl) then return end
+-- Removes value by key from said table when entity is no longer valid
+-- 'value' -    is optional and is 'true' by default
+-- 'key' -      is optional and is the entity by default
+function ENT:CONV_MapInTable( tbl, value, key )
+    if !istable(tbl) then
+        error("Table is invalid!")
+    end
 
-    tbl[self] = ( value or true )
+    value = value or true
+    key = key or self
+
+    tbl[key] = value
 
     self:CallOnRemove("RemoveMappedFrom"..tostring(tbl), function()
         if istable(tbl) then
-            tbl[self] = nil
+            tbl[key] = nil
         end
     end)
 end
