@@ -631,6 +631,14 @@ function ENT:CONV_AddHook( Type, func, name )
 end
 
 
+-- Remove a entity bound hook
+function ENT:CONV_RemoveHook( Type, name )
+    local id = "CONV_EntityHook_"..self:EntIndex().."_"..Type
+    if name then id = id .. name end
+    hook.Remove(Type, id)
+end
+
+
 --[[
 ==================================================================================================
                     NPC UTILITIES
