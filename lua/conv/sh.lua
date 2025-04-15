@@ -622,7 +622,7 @@ function ENT:CONV_AddHook( Type, func, name )
             return
         end
 
-        func(self, ...)
+        return func(self, ...)
     end)
 
     self:CallOnRemove("CONV_RemoveHook_"..id, function()
