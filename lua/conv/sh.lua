@@ -194,7 +194,6 @@ function conv.includeDir( directory, skipSubstrs )
         end
         if bSkip then 
             bSkip = false
-            print("SKIPPED", v)
             continue 
         end
 
@@ -213,7 +212,6 @@ function conv.includeDir( directory, skipSubstrs )
         end
         if bSkip then 
             bSkip = false
-            print("SKIPPED", v)
             continue 
         end
 		conv.includeDir( directory .. v, skipSubstrs )
