@@ -150,17 +150,14 @@ end
 
 function conv.addFile( File, directory )
 	local prefix = string.lower( string.Left( File, 3 ) )
-    local isServerFile = (prefix == "sv_" or File=="sv.lua")
+    local isServerFile = (prefix == "sv_" or File=="sv.lua" or File=="init.lua")
     local isClientFile = (prefix == "cl_" or File=="cl.lua")
-    local isSharedFile = !isClientFile && !isServerFile
+    local isSharedFile = (!isClientFile && !isServerFile)
 
 	if isServerFile && SERVER then
-
 		include( directory .. File )
-        return
-    
+        return    
     end
-
 
     if isClientFile then
 		if SERVER then
@@ -172,7 +169,6 @@ function conv.addFile( File, directory )
         return
     end
 
-
 	if isSharedFile then
 		AddCSLuaFile( directory .. File )
 		include( directory .. File )
@@ -180,19 +176,47 @@ function conv.addFile( File, directory )
 end
 
 
-function conv.includeDir( directory )
+function conv.includeDir( directory, skipSubstrs )
+    skipSubstrs = skipSubstrs or {}
+    
 	directory = directory .. "/"
 
 	local files, directories = file.Find( directory .. "*", "LUA" )
+    local bSkip = false
 
 	for _, v in ipairs( files ) do
+        for _, skipSubstr in ipairs(skipSubstrs) do
+            local res = string.find(v, skipSubstr)
+            if res then 
+                bSkip = true
+                break 
+            end
+        end
+        if bSkip then 
+            bSkip = false
+            print("SKIPPED", v)
+            continue 
+        end
+
 		if string.EndsWith( v, ".lua" ) then
 			conv.addFile( v, directory )
 		end
 	end
 
 	for _, v in ipairs( directories ) do
-		conv.includeDir( directory .. v )
+        for _, skipSubstr in ipairs(skipSubstrs) do
+            local res = string.find(v, skipSubstr)
+            if res then 
+                bSkip = true
+                break 
+            end
+        end
+        if bSkip then 
+            bSkip = false
+            print("SKIPPED", v)
+            continue 
+        end
+		conv.includeDir( directory .. v, skipSubstrs )
 	end
 end
 
