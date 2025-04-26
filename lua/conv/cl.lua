@@ -15,10 +15,15 @@ end)
 
 -- Give ammo to all weapons for a player, needs admin
 concommand.Add("conv_giveammo", function(ply, cmd, args)
+    if !ply:IsSuperAdmin() then return end
     net.Start("ConvGiveAmmo")
     net.SendToServer()
 end)
 
+concommand.Add("conv_rmwep", function(ply, cmd, args)
+    net.Start("ConvRmWep")
+    net.SendToServer()
+end)
 
 -- Show information about the player's weapons, useful when they have fast switch enabled
 concommand.Add("conv_checkweapons", function(ply, cmd, args)
