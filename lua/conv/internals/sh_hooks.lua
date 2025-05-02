@@ -1,21 +1,17 @@
 // INTERNAL, DO NOT USE
 
-
 hook.Add("InitPostEntity", "CONV", function()
-
     -- Store spawn menu NPCs
     conv._SpawnMenuNPCs = list.Get("NPC")
-    if ZBaseInstalled then
+
+    if ZBaseInstalled && istable(conv._SpawnMenuNPCs) && istable(ZBaseNPCs) then
         table.Merge(conv._SpawnMenuNPCs, table.Copy(ZBaseNPCs))
     end
-    ents._SpawnMenuNPCs = conv._SpawnMenuNPCs -- Backwards compatability
 
+    ents._SpawnMenuNPCs = conv._SpawnMenuNPCs -- Backwards compatability
 end)
 
-
-
 if CLIENT then
-
     -- Conv tool menu thing
     hook.Add("PopulateToolMenu", "CONV", function()
         if istable(conv.toolMenuFuncs) then
@@ -24,5 +20,4 @@ if CLIENT then
             end
         end
     end)
-
 end
