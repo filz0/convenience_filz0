@@ -1,4 +1,8 @@
-if SERVER then util.AddNetworkString("CONV_SendGModHint") end
+if SERVER then
+	util.AddNetworkString("CONV_SendGModHint") 
+	util.AddNetworkString("CONV_CallOnClient_Ent")
+	util.AddNetworkString("CONV_CallOnClient")
+end
 
 if CLIENT then
     net.Receive("CONV_SendGModHint", function()
