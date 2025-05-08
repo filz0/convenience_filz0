@@ -1,5 +1,112 @@
 --[[
 ==================================================================================================
+                    INTERNALS, NO TOUCHY
+==================================================================================================
+--]]
+
+-- Fixing user data from translation --
+local function convNormUserData( tab, typeOf )
+	for i = 1, #tab do
+		local data = tab[ i ]
+		data = string.gsub( data, typeOf, "" )
+		data = string.gsub( data, "[()]", "" )
+		data = string.gsub( data, " ", "" )
+		tab[ i ] = data
+	end
+
+	return tab
+end
+
+-- Function used by CallOnClient to translate sent data --
+function conv.cocTranslate(data, funcN, ent, ...)   
+	local args = string.find( data:lower(), "; " ) && string.Split( data, "; " ) || string.find( data:lower(), ";" ) && string.Split( data, ";" ) || { [1] = data }
+	
+	for i = 1, #args do
+
+		local var = args[ i ]
+		
+		if var && string.find( var, "Entity_id" ) then		
+			local entID = string.gsub( var, "Entity_id", "" )	
+			entID = tonumber( entID )
+
+			args[ i ] = Entity( entID ) 
+			var = nil			
+		end
+
+		if var && string.find( var, "Color" ) && string.find( var, "[()]" ) then 
+			local splts = string.find( var:lower(), ", " ) && string.Split( var, ", " )
+
+			splts = convNormUserData( splts, "Color" )
+
+			args[ i ] = splts[ 4 ] && Color( splts[ 1 ], splts[ 2 ], splts[ 3 ], splts[ 4 ] ) || Color( splts[ 1 ], splts[ 2 ], splts[ 3 ] )
+			var = nil 							
+		end
+
+		if var && string.find( var, "Vector" ) && string.find( var, "[()]" ) then
+			local splts = string.find( var:lower(), ", " ) && string.Split( var, ", " )
+
+			splts = convNormUserData( splts, "Vector" )
+
+			args[ i ] = Vector( splts[ 1 ], splts[ 2 ], splts[ 3 ] )
+			var = nil
+		end
+
+		if var && string.find( var, "Angle" ) && string.find( var, "[()]" ) then
+			local splts = string.find( var:lower(), ", " ) && string.Split( var, ", " )
+
+			splts = convNormUserData( splts, "Angle" )
+
+			args[ i ] = Angle( splts[ 1 ], splts[ 2 ], splts[ 3 ] )
+			var = nil
+		end
+
+		if var then
+			if string.find( var, "true" ) then
+				args[ i ] = true 
+				var = nil
+			elseif string.find( var, "false" ) then
+				args[ i ] = false 	
+				var = nil
+			elseif string.find( var, "nil" ) then
+				args[ i ] = nil 
+				var = nil
+			end
+		end
+
+		if var && string.find( var, "%d" ) && !string.find( var, "%a" ) then 
+			args[ i ] = tonumber( var ) 
+			var = nil 
+		end
+
+		if var && string.find( var, "%a" ) then		
+
+			args[ i ] = var 
+			var = nil 
+		end
+		
+		if i == #args then
+			
+			if IsValid(ent) || ent == game.GetWorld() then
+			
+			ent[ funcN ]( ent, unpack( args ) )
+			
+			elseif istable(ent) then
+				
+				ent[ funcN ]( unpack( args ) )
+				
+			else
+				
+				funcN( unpack( args ) )
+				
+			end
+			
+		end
+
+	end	
+end
+
+--[[
+==================================================================================================
                     COMMANDS
 ==================================================================================================
 --]]
@@ -53,137 +160,6 @@ end)
 function conv.addToolMenu(tab, cat, name, func)
     conv.toolMenuFuncs = conv.toolMenuFuncs or {}
     conv.toolMenuFuncs[tab.."_"..cat.."_"..name] = {tab=tab, cat=cat, name=name, func=func}
-end
-
-
---[[
-==================================================================================================
-                    CALL ON CLIENT
-==================================================================================================
---]]
-
-
--- Used internally by CallOnClient --
-local function CONVCallOn()   
-	local ent = net.ReadString()
-    local funcN = net.ReadString()
-	local data = net.ReadString()
-	
-	ent = _G[ ent ] || ent != "" && Entity( tonumber(ent) ) 
-	
-	funcN = _G[ funcN ] || funcN
-	
-	if isfunction( funcN ) || ent && ent[ funcN ] then
-		
-		CONV_COCTranslate( data, funcN, ent )
-
-	end
-end
-
--- Receives data from the server for the client about a function to call globaly --
-net.Receive( "CONV_CallOnClient", function()
-	CONVCallOn()
-end )
-
--- Fixing user data from translation --
-local function normUserData( tab, typeOf )
-	for i = 1, #tab do
-		local data = tab[ i ]
-		data = string.gsub( data, typeOf, "" )
-		data = string.gsub( data, "[()]", "" )
-		data = string.gsub( data, " ", "" )
-		tab[ i ] = data
-	end
-
-	return tab
-end
-
--- Function used by CallOnClient to translate sent data --
-function CONV_COCTranslate(data, funcN, ent, ...)   
-	local args = string.find( data:lower(), "; " ) && string.Split( data, "; " ) || string.find( data:lower(), ";" ) && string.Split( data, ";" ) || { [1] = data }
-	
-	for i = 1, #args do
-
-		local var = args[ i ]
-		
-		if var && string.find( var, "Entity_id" ) then		
-			local entID = string.gsub( var, "Entity_id", "" )	
-			entID = tonumber( entID )
-
-			args[ i ] = Entity( entID ) 
-			var = nil			
-		end
-
-		if var && string.find( var, "Color" ) && string.find( var, "[()]" ) then 
-			local splts = string.find( var:lower(), ", " ) && string.Split( var, ", " )
-
-			splts = normUserData( splts, "Color" )
-
-			args[ i ] = splts[ 4 ] && Color( splts[ 1 ], splts[ 2 ], splts[ 3 ], splts[ 4 ] ) || Color( splts[ 1 ], splts[ 2 ], splts[ 3 ] )
-			var = nil 							
-		end
-
-		if var && string.find( var, "Vector" ) && string.find( var, "[()]" ) then
-			local splts = string.find( var:lower(), ", " ) && string.Split( var, ", " )
-
-			splts = normUserData( splts, "Vector" )
-
-			args[ i ] = Vector( splts[ 1 ], splts[ 2 ], splts[ 3 ] )
-			var = nil
-		end
-
-		if var && string.find( var, "Angle" ) && string.find( var, "[()]" ) then
-			local splts = string.find( var:lower(), ", " ) && string.Split( var, ", " )
-
-			splts = normUserData( splts, "Angle" )
-
-			args[ i ] = Angle( splts[ 1 ], splts[ 2 ], splts[ 3 ] )
-			var = nil
-		end
-
-		if var then
-			if string.find( var, "true" ) then
-				args[ i ] = true 
-				var = nil
-			elseif string.find( var, "false" ) then
-				args[ i ] = false 	
-				var = nil
-			elseif string.find( var, "nil" ) then
-				args[ i ] = nil 
-				var = nil
-			end
-		end
-
-		if var && string.find( var, "%d" ) && !string.find( var, "%a" ) then 
-			args[ i ] = tonumber( var ) 
-			var = nil 
-		end
-
-		if var && string.find( var, "%a" ) then		
-
-			args[ i ] = var 
-			var = nil 
-		end
-		
-		if i == #args then
-			
-			if IsValid(ent) || ent == game.GetWorld() then
-			
-			ent[ funcN ]( ent, unpack( args ) )
-			
-			elseif istable(ent) then
-				
-				ent[ funcN ]( unpack( args ) )
-				
-			else
-				
-				funcN( unpack( args ) )
-				
-			end
-			
-		end
-
-	end	
 end
 
 

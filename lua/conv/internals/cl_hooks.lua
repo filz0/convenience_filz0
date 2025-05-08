@@ -3,7 +3,6 @@
 CONVScrnMSGTab = {}
 
 local function CONVScrnMSG()
-
 	for id, data in pairs( CONVScrnMSGTab ) do
 
 		local text = data['Text']
@@ -43,7 +42,6 @@ local function CONVScrnMSG()
 		if startTime <= curTime then draw.SimpleTextOutlined( text, font, x, y, fTColor, xAlign, yAlign, OWidth, fOColor ) end
 
 	end
-	
 end
 
 hook.Add( "HUDPaint", "CONV", function()
