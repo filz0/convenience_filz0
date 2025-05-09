@@ -172,3 +172,49 @@ function conv.callOnClient( ply, ent, functionName, ... )
 
 	end
 end
+
+
+--[[
+==================================================================================================
+                    LUA RUN
+==================================================================================================
+--]]
+
+-- Creates the lua_run entity to be used with related functions -- 
+function conv.createLuaRun()
+	CONV_LUA_RUN_ENT = ents.Create( "lua_run" )
+	if IsValid(CONV_LUA_RUN_ENT) then
+		CONV_LUA_RUN_ENT:SetName( "CONV_LUA_RUN_ENT" )
+		CONV_LUA_RUN_ENT:Spawn()
+	end
+end
+
+-- Creates a hook that runs whenever the set entity fires the specified output. -- 
+function ENT:CONV_CreateOutputHook(entOutput, eventName, delay, repetitions)
+	if !IsValid(CONV_LUA_RUN_ENT) then conv.createLuaRun() end
+	
+	delay = delay || 0
+	repetitions = repetitions || -1
+	
+	self:Fire( "AddOutput", entOutput .. " CONV_LUA_RUN_ENT:RunPassedCode:hook.Run( '" .. eventName .. "' ):" .. delay .. ":" .. repetitions .. "" )
+end
+
+-- Creates a function that runs whenever the set entity fires the specified output. -- 
+function ENT:CONV_CreateOutputFunction(entOutput, func, delay, repetitions)
+	if !self || !IsValid(self) then return end
+	if !IsValid(CONV_LUA_RUN_ENT) then conv.createLuaRun() end
+	
+	delay = delay || 0
+	repetitions = repetitions || -1
+
+	local hookID = entOutput .. self:GetClass() .. self:EntIndex()
+
+	hook.Add(hookID, self, function() 
+
+		local activator, caller = ACTIVATOR, CALLER
+		func(self, activator, caller)
+
+	end)
+
+	self:Fire( "AddOutput", entOutput .. " CONV_LUA_RUN_ENT:RunPassedCode:hook.Run( '" .. hookID .. "' ):" .. delay .. ":" .. repetitions .. "" )
+end

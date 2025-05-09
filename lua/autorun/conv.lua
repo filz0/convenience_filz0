@@ -36,6 +36,7 @@ if !conv then
 
 
     if SERVER then
+		CONV_LUA_RUN_ENT = CONV_LUA_RUN_ENT || nil
         include("conv/sv.lua")
         include("conv/sh.lua")
     end
