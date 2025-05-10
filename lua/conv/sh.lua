@@ -680,7 +680,7 @@ end
 ==================================================================================================
 --]]
 
--- Turns provided table into a string, respecting all variable types
+-- Turns the provided table into a string, respecting all variable types
 function conv.tableToString( tbl )
 	local str = "{"
 
@@ -731,7 +731,7 @@ function conv.tableToString( tbl )
 	return str
 end
 
--- Turns provided string into a table, recreating all variables
+-- Turns the provided string into a table, recreating all variables
 function conv.stringToTable( str, toPairs )
 	local func = CompileString( "return " .. str, "StringToTable", false )
     local tbl = func()
