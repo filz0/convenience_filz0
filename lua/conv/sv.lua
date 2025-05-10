@@ -119,3 +119,102 @@ end
 function ENT:CONV_RemoveSpawnFlags(...)
     self:SetKeyValue("spawnflags", bit.band(self:GetSpawnFlags(), bit.bnot(...)))
 end
+
+
+--[[
+==================================================================================================
+                                           CALL ON CLIENT
+==================================================================================================
+--]]
+
+-- Used to call a function on a client from the server -- 
+function conv.callOnClient( ply, ent, functionName, ... )
+	if !isstring(functionName) || !... then return end
+
+	local data = {...}
+	
+	for i = 1, #data do 
+
+		local var = data[ i ]
+
+		if isentity(var) then
+			data[ i ] = "Entity_id" .. var:EntIndex()
+		elseif isbool(var) then
+			data[ i ] = var == true && "true" || var == false && "false" || "nil"
+		elseif isnumber(var) then
+			data[ i ] = tostring( var )
+		elseif isvector(var) then
+			data[ i ] = "Vector( " .. var.x .. ", " .. var.y .. ", " .. var.z .. " )"
+		elseif isangle(var) then
+			data[ i ] = "Angle( " .. var.p .. ", " .. var.y .. ", " .. var.r .. " )"
+		elseif IsColor(var) then
+			data[ i ] = "Color( " .. var.r .. ", " .. var.g .. ", " .. var.b .. ", " .. var.a .. " )"
+		end
+
+		local send = {}
+		
+		if i == #data then
+			data = table.concat( data, "; ", 1, #data )
+
+			ent = IsValid(ent) && tostring( ent:EntIndex() ) || ent || ""
+			
+			net.Start( "CONV_CallOnClient" )
+			net.WriteString( ent )
+			net.WriteString( functionName )
+			net.WriteString( data )
+			
+			if IsValid(ply) && ply:IsPlayer() then
+				net.Send( ply )
+			else
+				net.Broadcast()
+			end
+		end
+
+	end
+end
+
+
+--[[
+==================================================================================================
+                    LUA RUN
+==================================================================================================
+--]]
+
+-- Creates the lua_run entity to be used with related functions -- 
+function conv.createLuaRun()
+	CONV_LUA_RUN_ENT = ents.Create( "lua_run" )
+	if IsValid(CONV_LUA_RUN_ENT) then
+		CONV_LUA_RUN_ENT:SetName( "CONV_LUA_RUN_ENT" )
+		CONV_LUA_RUN_ENT:Spawn()
+	end
+end
+
+-- Creates a hook that runs whenever the set entity fires the specified output. -- 
+function ENT:CONV_CreateOutputHook(entOutput, eventName, delay, repetitions)
+	if !IsValid(CONV_LUA_RUN_ENT) then conv.createLuaRun() end
+	
+	delay = delay || 0
+	repetitions = repetitions || -1
+	
+	self:Fire( "AddOutput", entOutput .. " CONV_LUA_RUN_ENT:RunPassedCode:hook.Run( '" .. eventName .. "' ):" .. delay .. ":" .. repetitions .. "" )
+end
+
+-- Creates a function that runs whenever the set entity fires the specified output. -- 
+function ENT:CONV_CreateOutputFunction(entOutput, func, delay, repetitions)
+	if !self || !IsValid(self) then return end
+	if !IsValid(CONV_LUA_RUN_ENT) then conv.createLuaRun() end
+	
+	delay = delay || 0
+	repetitions = repetitions || -1
+
+	local hookID = entOutput .. self:GetClass() .. self:EntIndex()
+
+	hook.Add(hookID, self, function() 
+
+		local activator, caller = ACTIVATOR, CALLER
+		func(self, activator, caller)
+
+	end)
+
+	self:Fire( "AddOutput", entOutput .. " CONV_LUA_RUN_ENT:RunPassedCode:hook.Run( '" .. hookID .. "' ):" .. delay .. ":" .. repetitions .. "" )
+end
