@@ -672,3 +672,80 @@ end
 function NPC:CONV_HasCapability( cap )
     return bit.band(self:CapabilitiesGet(), cap) == cap
 end
+
+
+--[[
+==================================================================================================
+                    TABLE UTILITY
+==================================================================================================
+--]]
+
+-- Turns provided table into a string, respecting all variable types
+function conv.tableToString( tbl )
+	local str = "{"
+
+	for k, v in pairs(tbl) do
+
+		if isstring(v) then
+
+			str = str .. string.format( "[%q] = %q,", k, v )
+
+		elseif isnumber(v) then
+
+			str = str .. string.format( "[%q] = %d,", k, v )
+
+		elseif isbool(v) then
+
+			str = str .. string.format( "[%q] = %s,", k, tostring(v) )
+
+        elseif IsColor(v) then
+
+            str = str .. string.format( "[%q] = Color( %d, %d, %d, %d ),", k, v.r, v.g, v.b, v.a || 255 )
+
+		elseif isvector(v) then
+
+			str = str .. string.format( "[%q] = Vector( %f, %f, %f ),", k, v.x, v.y, v.z )
+
+		elseif isangle(v) then
+
+			str = str .. string.format( "[%q] = Angle( %f, %f, %f ),", k, v.p, v.y, v.r )
+
+		elseif IsEntity(v) then
+
+			str = str .. string.format( "[%q] = Entity( %d ),", k, v:EntIndex() )
+
+        elseif istable(v) then
+
+            str = str .. string.format( "[%q] = %s,", k, conv.tableToString(v) )
+
+		else
+
+			str = str .. string.format( "[%q] = %s,", k, tostring(v) )
+
+		end
+
+	end
+
+	str = str .. "}"
+	
+	return str
+end
+
+-- Turns provided string into a table, recreating all variables
+function conv.stringToTable( str, toPairs )
+	local func = CompileString( "return " .. str, "StringToTable", false )
+    local tbl = func()
+    local tblPairs = {}
+
+    if tbl['1'] || toPairs then
+
+        for _, v in SortedPairs(tbl) do
+            table.insert( tblPairs, v )
+        end	
+
+        tbl = tblPairs
+
+    end
+
+    return tbl
+end
