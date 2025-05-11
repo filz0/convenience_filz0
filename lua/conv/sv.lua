@@ -203,10 +203,12 @@ end
 local scrWidth = 1920
 local scrHeight = 1080
 
+-- Used to get the width of the player's screen.
 function conv.ScrW(ply)
     return ply.CONV_SCRNW
 end
 
+-- Used to get the height of the player's screen.
 function conv.ScrH(ply)
     return ply.CONV_SCRNH
 end
