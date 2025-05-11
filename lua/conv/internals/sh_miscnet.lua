@@ -23,7 +23,7 @@ if CLIENT then
 		
 		if isfunction( funcN ) || ent && ent[ funcN ] then
 			
-			conv.cocTranslate( data, funcN, ent )
+			conv.cocTranslate( ent, funcN, data )
 
 		end
 	end)

@@ -4,105 +4,25 @@
 ==================================================================================================
 --]]
 
--- Fixing user data from translation --
-local function convNormUserData( tab, typeOf )
-	for i = 1, #tab do
-		local data = tab[ i ]
-		data = string.gsub( data, typeOf, "" )
-		data = string.gsub( data, "[()]", "" )
-		data = string.gsub( data, " ", "" )
-		tab[ i ] = data
-	end
-
-	return tab
-end
-
 -- Function used by CallOnClient to translate sent data --
-function conv.cocTranslate(data, funcN, ent, ...)   
-	local args = string.find( data:lower(), "; " ) && string.Split( data, "; " ) || string.find( data:lower(), ";" ) && string.Split( data, ";" ) || { [1] = data }
+function conv.cocTranslate( ent, funcN, data )   
 	
-	for i = 1, #args do
-
-		local var = args[ i ]
+	data = conv.stringToTable( data )	
+	
+	if IsValid(ent) || ent == game.GetWorld() then
+	
+		ent[ funcN ]( ent, unpack( data ) )
+	
+	elseif istable(ent) then
 		
-		if var && string.find( var, "Entity_id" ) then		
-			local entID = string.gsub( var, "Entity_id", "" )	
-			entID = tonumber( entID )
-
-			args[ i ] = Entity( entID ) 
-			var = nil			
-		end
-
-		if var && string.find( var, "Color" ) && string.find( var, "[()]" ) then 
-			local splts = string.find( var:lower(), ", " ) && string.Split( var, ", " )
-
-			splts = convNormUserData( splts, "Color" )
-
-			args[ i ] = splts[ 4 ] && Color( splts[ 1 ], splts[ 2 ], splts[ 3 ], splts[ 4 ] ) || Color( splts[ 1 ], splts[ 2 ], splts[ 3 ] )
-			var = nil 							
-		end
-
-		if var && string.find( var, "Vector" ) && string.find( var, "[()]" ) then
-			local splts = string.find( var:lower(), ", " ) && string.Split( var, ", " )
-
-			splts = convNormUserData( splts, "Vector" )
-
-			args[ i ] = Vector( splts[ 1 ], splts[ 2 ], splts[ 3 ] )
-			var = nil
-		end
-
-		if var && string.find( var, "Angle" ) && string.find( var, "[()]" ) then
-			local splts = string.find( var:lower(), ", " ) && string.Split( var, ", " )
-
-			splts = convNormUserData( splts, "Angle" )
-
-			args[ i ] = Angle( splts[ 1 ], splts[ 2 ], splts[ 3 ] )
-			var = nil
-		end
-
-		if var then
-			if string.find( var, "true" ) then
-				args[ i ] = true 
-				var = nil
-			elseif string.find( var, "false" ) then
-				args[ i ] = false 	
-				var = nil
-			elseif string.find( var, "nil" ) then
-				args[ i ] = nil 
-				var = nil
-			end
-		end
-
-		if var && string.find( var, "%d" ) && !string.find( var, "%a" ) then 
-			args[ i ] = tonumber( var ) 
-			var = nil 
-		end
-
-		if var && string.find( var, "%a" ) then		
-
-			args[ i ] = var 
-			var = nil 
-		end
+		ent[ funcN ]( unpack( data ) )
 		
-		if i == #args then
-			
-			if IsValid(ent) || ent == game.GetWorld() then
-			
-			ent[ funcN ]( ent, unpack( args ) )
-			
-			elseif istable(ent) then
-				
-				ent[ funcN ]( unpack( args ) )
-				
-			else
-				
-				funcN( unpack( args ) )
-				
-			end
-			
-		end
-
-	end	
+	else
+		
+		funcN( unpack( data ) )
+		
+	end
+	
 end
 
 --[[

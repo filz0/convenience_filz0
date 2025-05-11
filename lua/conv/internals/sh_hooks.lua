@@ -10,7 +10,3 @@ hook.Add("InitPostEntity", "CONV", function()
 
     ents._SpawnMenuNPCs = conv._SpawnMenuNPCs -- Backwards compatability
 end)
-
-if CLIENT then
-    
-end
