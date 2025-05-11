@@ -685,7 +685,7 @@ function conv.tableToString( tbl )
 	local str = "{"
 
 	for k, v in pairs(tbl) do
-
+        
 		if isstring(v) then
 
 			str = str .. string.format( "[%q] = %q,", k, v )
@@ -733,19 +733,16 @@ end
 
 -- Turns the provided string into a table, recreating all variables
 function conv.stringToTable( str, toPairs )
-	local func = CompileString( "return " .. str, "StringToTable", false )
+    local func = CompileString( "return " .. str, "StringToTable", false )
     local tbl = func()
-    local tblPairs = {}
-
+    
     if tbl['1'] || toPairs then
-
         for _, v in SortedPairs(tbl) do
-            table.insert( tblPairs, v )
-        end	
-
-        tbl = tblPairs
-
+            tbl[_] = nil
+            tbl[tonumber(_)] = v
+        end
     end
 
     return tbl
 end
+
