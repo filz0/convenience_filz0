@@ -20,7 +20,7 @@ local function CONVScrnMSG()
 			local fadeIn = data['FadeIn']
 			local fadeOut = data['FadeOut']
 			local dur = data['Duration']
-			local startTime = data['StartTime'] + del
+			local startTime = data['StartTime']
 
 
 			local curTime = CurTime()

@@ -116,20 +116,38 @@ end
 function conv.addScreenMSG(id, text, font, x, y, tColor, xAlign, yAlign, OWidth, OColor, del, fadeIn, fadeOut, dur)		
 	if ( id && ( !text || text == "" ) ) then CONVScrnMSGTab[ id ] = nil return end
 
-	CONVScrnMSGTab[ id ] = {
-		['Text'] 		= text || "",
-		['Font'] 		= font || "DermaDefault",
-		['X'] 			= x || 0,
-		['Y'] 			= y || 0,
-		['Color'] 		= tColor || Color( 255, 255, 255, 255 ),
-		['XAlign'] 		= xAlign || TEXT_ALIGN_CENTER,
-		['YAlign'] 		= yAlign || TEXT_ALIGN_CENTER,
-		['OWidth'] 		= OWidth || 0,
-		['OColor'] 		= OColor || Color( 0, 0, 0, 255 ),
-		['Delay'] 		= del || 0,
-		['FadeIn'] 		= fadeIn || 0,
-		['FadeOut'] 	= fadeOut || 0,
-		['Duration'] 	= dur || 0,
-		['StartTime'] 	= CurTime(),
+	text = text || ""
+	font = font || "DermaDefault"
+	x = x || 0
+	y = y || 0
+	tColor = tColor || Color( 255, 255, 255, 255 )
+	xAlign = xAlign || TEXT_ALIGN_CENTER
+	yAlign = yAlign || TEXT_ALIGN_CENTER
+	OWidth = OWidth || 0
+	OColor = OColor || Color( 0, 0, 0, 255 )
+	del = del || 0
+	fadeIn = fadeIn || 0
+	fadeOut = fadeOut || 0
+	dur = dur || 0
+
+	local function pp(tbl, k, s, add, ret)
+		return add && ( tbl[k] && tbl[k][s] && tbl[k][s] + add || add ) || ( tbl[k] && tbl[k][s] && tbl[k][s] || ret )
+	end
+
+	CONVScrnMSGTab[id] = { 
+		['Text'] 		= text,
+		['Font'] 		= font,
+		['X'] 			= x,
+		['Y'] 			= y,
+		['Color'] 		= tColor,
+		['XAlign'] 		= xAlign,
+		['YAlign'] 		= yAlign,
+		['OWidth'] 		= OWidth,
+		['OColor'] 		= OColor,
+		['Delay'] 		= del,
+		['FadeIn'] 		= fadeIn,
+		['FadeOut'] 	= fadeOut,
+		['Duration'] 	= pp(CONVScrnMSGTab, id, 'Duration', dur),
+		['StartTime'] 	= pp(CONVScrnMSGTab, id, 'StartTime', nil, CurTime() + del),
 	}
 end
