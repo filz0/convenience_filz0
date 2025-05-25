@@ -224,11 +224,11 @@ function conv.ScrHScale(ply)
 end
 
 -- Returns the central point of the horizontal axis.
-function conv.ScrWCenter()
-	return scrWidth / 2
+function conv.ScrWCenter(ply)
+	return conv.ScrW(ply) / 2
 end
 
 -- Returns the central point of the vertical axis.
-function conv.ScrHCenter()
-	return scrHeight / 2
+function conv.ScrHCenter(ply)
+	return conv.ScrH(ply) / 2
 end

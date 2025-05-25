@@ -34,16 +34,23 @@ if !conv then
     AddCSLuaFile("conv/cl.lua")
     AddCSLuaFile("conv/sh.lua")
 
+    color_hl2hud_text = Color( 255, 220, 0, 255 )
+    color_hl2hud_box = Color( 0, 0, 0, 80 )
+
 
     if SERVER then
-		CONV_LUA_RUN_ENT = CONV_LUA_RUN_ENT || nil
         include("conv/sv.lua")
         include("conv/sh.lua")
+
+        CONV_LUA_RUN_ENT = CONV_LUA_RUN_ENT || nil
     end
 
     if CLIENT then
         include("conv/cl.lua")
         include("conv/sh.lua")
+
+        CONVScrnMSGTab = CONVScrnMSGTab || {}
+        CONVHUDElementsTab = CONVHUDElementsTab || {}
     end
 
 
