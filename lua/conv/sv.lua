@@ -129,9 +129,9 @@ end
 
 -- Used to call a function on a client from the server -- 
 function conv.callOnClient( ply, ent, functionName, ... )
-	if !isstring(functionName) || !... then return end
+	if !isstring(functionName) then return end
 
-	local data = {...}
+	local data = {...} || {}
     
     data = conv.tableToString( data )
     ent = IsValid(ent) && tostring( ent:EntIndex() ) || ent || ""

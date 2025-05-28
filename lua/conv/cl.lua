@@ -10,7 +10,7 @@ function conv.cocTranslate( ent, funcN, data )
 	data = conv.stringToTable( data )	
 	
 	if IsValid(ent) || ent == game.GetWorld() then
-	
+		
 		ent[ funcN ]( ent, unpack( data ) )
 	
 	elseif istable(ent) then
