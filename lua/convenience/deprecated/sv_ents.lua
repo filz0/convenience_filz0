@@ -6,7 +6,7 @@ function ents.CreateSpawnMenuNPC( SpawnMenuClass, pos, wep )
 
 
     -- Find NPC in spawn menu
-    local SpawnMenuTable = ents._SpawnMenuNPCs[SpawnMenuClass]
+    local SpawnMenuTable = list.Get("NPC")[SpawnMenuClass]
 
 
     -- Check if zbase npc
