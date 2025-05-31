@@ -1,7 +1,5 @@
 // INTERNAL, DO NOT USE
 
-CONVScrnMSGTab = {}
- 
 local function CONVScrnMSG()
 	if !table.IsEmpty( CONVScrnMSGTab ) then
  
@@ -20,7 +18,7 @@ local function CONVScrnMSG()
 			local fadeIn = data['FadeIn']
 			local fadeOut = data['FadeOut']
 			local dur = data['Duration']
-			local startTime = data['StartTime'] + del
+			local startTime = data['StartTime']
 
 
 			local curTime = CurTime()
@@ -48,8 +46,23 @@ local function CONVScrnMSG()
 	end
 end
 
+local cl_drawhud = GetConVar( "cl_drawhud" )
+local function CONVHUDElements()
+
+	if !table.IsEmpty( CONVHUDElementsTab ) && cl_drawhud:GetBool() then
+		
+		for id, data in pairs( CONVHUDElementsTab ) do
+
+			if CONVHUDElementsTab[id]['Enable'] then CONVHUDElementsTab[id]['Function']() end
+
+		end
+
+	end
+end
+
 hook.Add("HUDPaint", "CONV", function()
 	CONVScrnMSG()
+	CONVHUDElements()
 end)
 
 -- Conv tool menu thing
