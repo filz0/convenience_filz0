@@ -483,6 +483,12 @@ function conv.thisEntOrWorld( ent )
 end
 
 
+-- Runs a check based on a percentage chance
+function conv.pctChance(percent)
+    return math.random() * 100 <= percent
+end
+
+
 --[[
 ==================================================================================================
                     ENTITY TIMER / TICK FUNCTIONS
