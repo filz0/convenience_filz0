@@ -19,17 +19,19 @@ local function CONVScrnMSG()
 			local fadeOut = data['FadeOut']
 			local dur = data['Duration']
 			local startTime = data['StartTime']
+			local scrnFade = data['ScreenFade']
 
-
+			
 			local curTime = CurTime()
 			local alpha = 255
+			local alpha2 = 255
 
 			if curTime < startTime + fadeIn then
 
 				alpha = fadeIn > 0 && math.Clamp( ( curTime - startTime ) / fadeIn, 0, 1 ) * 255 || 255
 
 			elseif curTime >= startTime + fadeIn + dur then
-
+				
 				alpha = fadeOut > 0 && math.Clamp( 1 - ( curTime - ( startTime + fadeIn + dur ) ) / fadeOut, 0, 1 ) * 255 || 0
 
 				if alpha <= 0 then CONVScrnMSGTab[ id ] = nil end
@@ -39,7 +41,10 @@ local function CONVScrnMSG()
 			local fTColor = Color( tColor.r, tColor.g, tColor.b, alpha )
 			local fOColor = Color( OColor.r, OColor.g, OColor.b, alpha )
 
-			if startTime <= curTime then draw.SimpleTextOutlined( text, font, x * conv.ScrWScale(), y * conv.ScrHScale(), fTColor, xAlign, yAlign, OWidth, fOColor ) end
+			if startTime <= curTime then 
+
+				draw.SimpleTextOutlined( text, font, x, y, fTColor, xAlign, yAlign, OWidth, fOColor ) 	
+			end
 
 		end
 

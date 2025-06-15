@@ -16,6 +16,8 @@ hook.Add( "InitPostEntity", "CONV", function()
         conv.createLuaRun()
     end
 
+    conv.parseNodeFile()
+
     if CLIENT then
         net.Start("CONV_ScreenRes")
         net.WriteFloat(ScrW())
