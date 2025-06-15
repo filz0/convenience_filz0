@@ -2,7 +2,6 @@ local Developer = GetConVar("developer")
 local ENT = FindMetaTable("Entity")
 local NPC = FindMetaTable("NPC")
 
-
 --[[
 ==================================================================================================
                     TIMER / TICK STUFF
@@ -483,6 +482,66 @@ function conv.thisEntOrWorld( ent )
 end
 
 
+-- Runs a check based on a percentage chance
+function conv.pctChance(percent)
+    return math.random() * 100 <= percent
+end
+
+-- Checks if pos1 is at or closer distance to pos2
+function conv.inDistVector(pos1, pos2, dist)
+
+    if !isvector(pos1) then
+        error("Pos1 is invalid or no Vector!")
+    end
+
+    if !isvector(pos2) then
+        error("Pos2 is invalid or no Vector!")
+    end
+
+    if !isnumber(dist) then
+        error("No distance provided!")
+    end
+
+	local distSqr = dist * dist
+	local distTSqr = pos1:DistToSqr( pos2 ) <= distSqr
+	return distTSqr
+end
+
+-- Checks the distance between pos1 and pos2 and returns square distance or root of it
+function conv.getDistVector(pos1, pos2, root)
+
+    if !isvector(pos1) then
+        error("Pos1 is invalid or no Vector!")
+    end
+
+    if !isvector(pos2) then
+        error("Pos2 is invalid or no Vector!")
+    end
+
+	local distTSqr = pos1:DistToSqr( pos2 )
+	local dist = root && math.sqrt( distTSqr ) || distTSqr
+	return dist
+end
+
+-- Check duration of the provided sound file
+function conv.getSoundDuration(snd)
+    if !snd then
+        error("No sound provided!")
+    end
+
+    local sounddur = SoundDuration( snd )
+	if sounddur then
+		sounddur = math.Round( sounddur * 1000 ) / 1000	
+	end
+
+    return sounddur
+end
+
+-- Helper to check if a number is a float (has decimals)
+function conv.isFloat(n)
+    return isnumber(n) && math.floor(n) != n
+end
+
 --[[
 ==================================================================================================
                     ENTITY TIMER / TICK FUNCTIONS
@@ -721,7 +780,8 @@ function conv.tableToString( tbl )
 
 		elseif isnumber(v) then
 
-			str = str .. string.format( "[%q] = %d,", k, v )
+			--str = str .. string.format( "[%q] = %d,", k, v ) -- turns anything below 1 to 0 :(
+            str = str .. string.format( "[%q] = " .. tostring(v) .. ",", k, v )
 
 		elseif isbool(v) then
 
@@ -770,3 +830,129 @@ function conv.stringToTable( str )
     return tbl
 end
 
+
+--[[
+==================================================================================================
+					AI NODEGRAPH
+==================================================================================================
+--]]
+
+
+-- Returns a table with selected type of nodes
+function conv.aiNodesGet(nType)
+	return ( !nType || nType == 1 ) && CONV_NODES_ALL || nType == 2 && CONV_NODES_GROUND || nType == 3 && CONV_NODES_AIR || nType == 4 && CONV_NODES_CLIMB || nType == 5 && CONV_NODES_WATER
+end
+
+-- Ain net version
+function conv.ainGetVersion()
+	return CONV_AINNET_VER
+end
+
+-- Map version
+function conv.mapGetVersion()
+	return CONV_MAP_VER
+end
+
+-- Returns nodes that are in uhhhh
+function conv.aiNodesFindInSphere(pos, distMin, distMax, nType, visible, nodePosOffset)
+   
+	if !conv.aiNodesGet( nType ) || #conv.aiNodesGet( nType ) == 0 then return end
+
+    local nodes = {}
+    local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
+
+	for i = 1, #conv.aiNodesGet( nType ) do		
+
+        local node = conv.aiNodesGet( nType )[i]
+		local dist = conv.getDistVector( node.pos, pos, true ) 
+        local tr = util.TraceLine({
+            start = pos,
+            endpos = node.pos + nodePosOffset,
+            mask = MASK_SOLID_BRUSHONLY
+		})
+        
+		if dist >= distMin && dist <= distMax && ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then table.insert( nodes, node ) end
+
+	end
+
+    return nodes
+end
+
+-- Returns the closest node to the provided position 
+function conv.aiNodeFindClosest(pos, nType, visible, nodePosOffset)
+    if !conv.aiNodesGet( nType ) || #conv.aiNodesGet( nType ) == 0 then return end
+
+	local distClosest = math.huge
+	local nodeClosest
+    local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
+
+	for i = 1, #conv.aiNodesGet( nType ) do		
+
+        local node = conv.aiNodesGet( nType )[i]	
+		local dist = conv.getDistVector( node.pos, pos )
+        local tr = util.TraceLine({
+            start = pos,
+            endpos = node.pos + nodePosOffset,
+            mask = MASK_SOLID_BRUSHONLY
+		})
+        
+		if dist < distClosest && ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then	
+			distClosest = dist
+			nodeClosest = node
+		end
+	end
+
+	return nodeClosest, distClosest 
+end 
+
+-- Returns the furthest node to the provided position but not further than set distance
+function conv.aiNodeFindFurthest(pos, distMax, nType, visible, nodePosOffset)
+	if !conv.aiNodesGet( nType ) || #conv.aiNodesGet( nType ) == 0 then return end
+
+	local distFurthest = 0
+	local nodeFurthest
+    distMax = distMax * distMax
+    local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
+
+	for i = 1, #conv.aiNodesGet( nType ) do		
+
+        local node = conv.aiNodesGet( nType )[i]				
+		local dist = conv.getDistVector( node.pos, pos )
+        local tr = util.TraceLine({
+            start = pos,
+            endpos = node.pos + nodePosOffset,
+            mask = MASK_SOLID_BRUSHONLY
+		})
+
+		if dist > distFurthest && dist <= distMax && ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then	
+			distFurthest = dist
+			nodeFurthest = node
+		end
+	end
+
+	return nodeFurthest, distFurthest
+end
+
+--[[
+function conv.aiNodeGetLink(src, dest, nType)
+	local nodes = conv.aiNodesGet(nType)
+	local nodeSrc = nodes[src]
+	local nodeDest = nodes[dest]
+
+	if ( !nodeSrc || !nodeDest ) then return end
+
+    for i = 1, #nodeSrc.link do
+        local link = nodeSrc.link[i]
+        if ( link.src == nodeDest || link.dest == nodeDest ) then return link end
+    end
+
+    for i = 1, #nodeDest.link do
+        local link = nodeDest.link[i]
+        if ( link.src == nodeSrc || link.dest == nodeSrc ) then return link end
+    end
+end
+
+function conv.aiNodeHasLink(src, dest, nType)
+	return conv.aiNodeGetLink( src, dest, nType ) != nil
+end
+]]

@@ -89,7 +89,7 @@ concommand.Add( "conv_telemetry", function(ply, cmd, args)
 		local x2, y2 = x + 110, y
 		local text2 = math.Round( ( 1 / FrameTime() ), 3 )
 		local textW2, textH2 = draw.SimpleText( text2, "HudHintTextLarge", x2, y2, color_hl2hud_text, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-
+ 
 		local x, y = x, y + textH
 		local text = "FRAME TIME:"
 		local textW, textH = draw.SimpleText( text, "HudHintTextLarge", x, y, color_hl2hud_text, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
@@ -154,7 +154,7 @@ end
 function conv.ScrHCenter()
 	return ScrH() / 2
 end
-
+ 
 -- Used to create hud elements on the go
 function conv.addHUDElement(id, enable, func)		
 	if ( id && enable == nil && !isfunction(func) ) then CONVHUDElementsTab[ id ] = nil return end
@@ -167,8 +167,8 @@ end
  
 -- Used to create on screen messages/text similar to "game_text". entity https://developer.valvesoftware.com/wiki/Game_text
 function conv.addScreenMSG(id, text, font, x, y, tColor, xAlign, yAlign, OWidth, OColor, del, fadeIn, fadeOut, dur)		
-	if ( id && ( !text || text == "" ) ) then CONVScrnMSGTab[ id ] = nil return end
-
+	if ( id && ( !text ) ) then CONVScrnMSGTab[ id ] = nil return end
+	
 	text = text || ""
 	font = font || "DermaDefault"
 	x = x || 0
@@ -186,7 +186,7 @@ function conv.addScreenMSG(id, text, font, x, y, tColor, xAlign, yAlign, OWidth,
 	local function pp(tbl, k, s, add, ret)
 		return add && ( tbl[k] && tbl[k][s] && tbl[k][s] + add || add ) || ( tbl[k] && tbl[k][s] && tbl[k][s] || ret )
 	end
-
+	
 	CONVScrnMSGTab[id] = { 
 		['Text'] 		= text,
 		['Font'] 		= font,
@@ -203,4 +203,50 @@ function conv.addScreenMSG(id, text, font, x, y, tColor, xAlign, yAlign, OWidth,
 		['Duration'] 	= pp(CONVScrnMSGTab, id, 'Duration', dur),
 		['StartTime'] 	= pp(CONVScrnMSGTab, id, 'StartTime', nil, CurTime() + del),
 	}
+end
+
+-- Used to play UI sounds
+function conv.emitUISound(snd, pitch, vol, channel, sfs, dsp, filter)		
+
+	local ply = LocalPlayer()
+	vol = vol || 1
+	pitch = pitch || 100
+	channel = channel || CHAN_AUTO
+	sfs = sfs || 0
+	dsp = dsp || 0
+
+
+	ply.m_tCONVClientSounds = ply.m_tCONVClientSounds || {}
+
+
+	local function stopSND(snd)
+
+		for k, v in ipairs ( ply.m_tCONVClientSounds ) do
+			if snd && v == snd then
+				ply:StopSound( snd ) 	
+				table.remove( ply.m_tCONVClientSounds, k ) 		
+			else
+				ply:StopSound( v ) 	
+				table.remove( ply.m_tCONVClientSounds, k )			
+			end			
+		end
+
+	end
+
+
+	if snd then	
+
+		ply:EmitSound( snd, 0, pitch, vol, channel, sfs, dsp, filter )
+		table.insert( ply.m_tCONVClientSounds, snd )	
+
+	elseif snd && pitch == true then
+
+		stopSND(snd)		
+
+	elseif !snd && ply.m_tCONVClientSounds && #ply.m_tCONVClientSounds > 0 then	
+
+		stopSND()
+
+	end			
+
 end

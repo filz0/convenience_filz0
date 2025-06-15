@@ -92,6 +92,8 @@ function conv.getEntInfo( cls, func )
         return
     end
 
+    ent:CONV_AddHook( "EntityEmitSound", function() return false end )
+
     ent:Spawn()
     ent:Activate()
 
