@@ -10,7 +10,7 @@ local SIZEOF_INT = 4
 local SIZEOF_SHORT = 2
 local AINET_VERSION_NUMBER = 37
 local NUM_HULLS = 10
-local MAX_NODES = 1500
+local MAX_NODES = 4096
 
 CONV_AINNET_VER     = CONV_AINNET_VER || 0
 CONV_MAP_VER        = CONV_MAP_VER || 0
@@ -50,7 +50,7 @@ local function ReadUShort(f) return toUShort( f:Read( SIZEOF_SHORT ) ) end
 -- Reads the .ain file for the current map and returns a table of AI nodes
 function conv.parseNodeFile()
 
-	local f = file.Open( "maps/graphs/" ..game.GetMap() .. ".ain", "rb", "GAME" )
+	local f = file.Open( "maps/graphs/" .. game.GetMap() .. ".ain", "rb", "GAME" )
 
     if (!f) then return end
 
@@ -72,7 +72,7 @@ function conv.parseNodeFile()
 
     if( ainet_ver != AINET_VERSION_NUMBER ) then
 
-        MsgN("Unknown graph file")
+        MsgN( "Unknown graph file" )
 
         return
     end
@@ -81,7 +81,7 @@ function conv.parseNodeFile()
 
     if ( numNodes > MAX_NODES || numNodes < 0 ) then
 
-        MsgN("Graph file has an unexpected amount of nodes")
+        MsgN( "Graph file has an unexpected amount of nodes" )
         return
     end
 
@@ -101,15 +101,15 @@ function conv.parseNodeFile()
         
         local node = {
             pos = v,
-            yaw = yaw,
-            offset = flOffsets,
+            --yaw = yaw,
+            --offset = flOffsets,
             type = nodetype,
-            info = nodeinfo,
-            zone = zone,
-            neighbor = {},
-            numneighbors = 0,
-            link = {},
-            numlinks = 0
+            --info = nodeinfo,
+            --zone = zone,
+            --neighbor = {},
+            --numneighbors = 0,
+            --link = {},
+            --numlinks = 0
         }
 
         table.insert( CONV_NODES_ALL, node )
@@ -177,3 +177,245 @@ function conv.parseNodeFile()
     end
 
 end
+
+
+--[[
+==================================================================================================
+					AI NODEGRAPH CONVENIENCE
+==================================================================================================
+--]]
+
+
+-- Returns a table with selected type of nodes
+function conv.aiNodesGet(nType)
+	return ( !nType || nType == 1 ) && CONV_NODES_ALL || nType == 2 && CONV_NODES_GROUND || nType == 3 && CONV_NODES_AIR || nType == 4 && CONV_NODES_CLIMB || nType == 5 && CONV_NODES_WATER
+end
+
+-- Ain net version
+function conv.ainGetVersion()
+	return CONV_AINNET_VER
+end
+
+-- Map version
+function conv.mapGetVersion()
+	return CONV_MAP_VER
+end
+
+---- Returns nodes that are in uhhhh
+-- pos: Vector - position to check from
+-- distMin, distMax: number - horizontal distance range
+-- nType: node type
+-- visible: see aiNodesFindInSphere
+-- posOffset, nodePosOffset: optional offsets
+function conv.aiNodesFindInSphere(pos, distMin, distMax, nType, visible, posOffset, nodePosOffset)
+   
+	if !conv.aiNodesGet( nType ) || #conv.aiNodesGet( nType ) == 0 then return end
+
+    local nodes = {}
+    local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
+    local posOffset = posOffset || Vector( 0, 0, 3 )
+    distMin = distMin * distMin
+    distMax = distMax * distMax
+
+	for i = 1, #conv.aiNodesGet( nType ) do		
+
+        local node = conv.aiNodesGet( nType )[i]
+		local dist = conv.getDistVector( node.pos, pos ) 
+        
+        local tr 
+        if visible != nil then
+            tr = util.TraceLine({
+                start = pos + posOffset,
+                endpos = node.pos + nodePosOffset,
+                mask = MASK_SOLID_BRUSHONLY
+		    })
+        end
+
+        if ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then
+            if dist >= distMin && dist <= distMax then 
+                nodes[#nodes + 1] = node 
+            end
+        end
+	end
+
+    return nodes
+end
+
+---- Returns nodes within a certain horizontal distance and height difference
+-- pos: Vector - position to check from
+-- distMin, distMax: number - horizontal distance range
+-- heightMin, heightMax: number - vertical (Z) difference range (optional, can be nil)
+-- nType: node type
+-- visible: see aiNodesFindInSphere
+-- posOffset, nodePosOffset: optional offsets
+function conv.aiNodesFindInSphereHeight(pos, distMin, distMax, heightMin, heightMax, nType, visible, posOffset, nodePosOffset)
+    if !conv.aiNodesGet( nType ) || #conv.aiNodesGet( nType ) == 0 then return end
+
+    local nodes = {}
+    local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
+    local posOffset = posOffset || Vector( 0, 0, 3 )
+    distMin = distMin * distMin
+    distMax = distMax * distMax
+
+    for i = 1, #conv.aiNodesGet( nType ) do
+        local node = conv.aiNodesGet( nType )[i]
+        local nodePos = node.pos
+        local horizDist = conv.getDistVector( Vector( nodePos.x, nodePos.y, 0 ), Vector( pos.x, pos.y, 0 ) )
+        local heightDiff = nodePos.z - pos.z
+
+        local tr
+        if visible != nil then
+            tr = util.TraceLine({
+                start = pos + posOffset,
+                endpos = node.pos + nodePosOffset,
+                mask = MASK_SOLID_BRUSHONLY
+		    })
+        end
+
+        local inDist = horizDist >= distMin && horizDist <= distMax
+        local inHeight = true
+        if heightMin || heightMax then
+            inHeight = ( !heightMin || heightDiff >= heightMin ) && ( !heightMax || heightDiff <= heightMax )
+        end
+
+        if ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then
+            if inDist && inHeight then
+                nodes[#nodes + 1] = node
+            end
+        end
+    end
+
+    return nodes
+end
+
+-- Finds all node positions within a box defined by min and max vectors from a given position
+function conv.aiNodesFindInBox(pos, mins, maxs, nType, visible, posOffset, nodePosOffset)
+    local nodes = {}
+    local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
+    local posOffset = posOffset || Vector( 0, 0, 3 )
+    local minVec = pos + mins
+    local maxVec = pos + maxs
+
+    for i = 1, #conv.aiNodesGet( nType ) do
+        local node = conv.aiNodesGet( nType )[i]
+        local nodePos = node.pos
+
+        local tr
+        if visible != nil then
+            tr = util.TraceLine({
+                start = pos + posOffset,
+                endpos = nodePos + nodePosOffset,
+                mask = MASK_SOLID_BRUSHONLY
+            })
+        end
+
+        if ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then
+            if nodePos.x >= minVec.x and nodePos.x <= maxVec.x && nodePos.y >= minVec.y and nodePos.y <= maxVec.y && nodePos.z >= minVec.z and nodePos.z <= maxVec.z then
+                nodes[#nodes + 1] = node
+            end
+        end
+    end
+
+    return nodes
+end
+
+-- Returns the closest node to the provided position 
+-- pos: Vector - position to check from
+-- nType: node type
+-- visible: see aiNodesFindInSphere
+-- posOffset, nodePosOffset: optional offsets
+function conv.aiNodeFindClosest(pos, nType, visible, posOffset, nodePosOffset)
+    if !conv.aiNodesGet( nType ) || #conv.aiNodesGet( nType ) == 0 then return end
+
+	local distClosest = math.huge
+	local nodeClosest
+    local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
+    local posOffset = posOffset || Vector( 0, 0, 3 )
+
+	for i = 1, #conv.aiNodesGet( nType ) do		
+
+        local node = conv.aiNodesGet( nType )[i]	
+		local dist = conv.getDistVector( node.pos, pos )
+        local tr 
+        if visible != nil then
+            tr = util.TraceLine({
+                start = pos + posOffset,
+                endpos = node.pos + nodePosOffset,
+                mask = MASK_SOLID_BRUSHONLY
+		    })
+        end
+
+        if ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then      
+            if dist < distClosest then	
+                distClosest = dist
+                nodeClosest = node
+            end
+        end
+	end
+
+	return nodeClosest, distClosest 
+end 
+
+-- Returns the furthest node to the provided position but not further than set distance
+-- pos: Vector - position to check from
+-- distMax: number - distance range
+-- nType: node type
+-- visible: see aiNodesFindInSphere
+-- posOffset, nodePosOffset: optional offsets
+function conv.aiNodeFindFurthest(pos, distMax, nType, visible, posOffset, nodePosOffset)
+	if !conv.aiNodesGet( nType ) || #conv.aiNodesGet( nType ) == 0 then return end
+
+	local distFurthest = 0
+	local nodeFurthest
+    distMax = distMax * distMax
+    local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
+    local posOffset = posOffset || Vector( 0, 0, 3 )
+
+	for i = 1, #conv.aiNodesGet( nType ) do		
+
+        local node = conv.aiNodesGet( nType )[i]				
+		local dist = conv.getDistVector( node.pos, pos )
+        local tr 
+        if visible != nil then
+            tr = util.TraceLine({
+                start = pos + posOffset,
+                endpos = node.pos + nodePosOffset,
+                mask = MASK_SOLID_BRUSHONLY
+		    })
+        end
+
+        if ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then 
+
+            if dist > distFurthest && dist <= distMax then	
+                distFurthest = dist
+                nodeFurthest = node
+            end
+        end
+	end
+
+	return nodeFurthest, distFurthest
+end
+
+--[[
+function conv.aiNodeGetLink(src, dest, nType)
+	local nodes = conv.aiNodesGet(nType)
+	local nodeSrc = nodes[src]
+	local nodeDest = nodes[dest]
+
+	if ( !nodeSrc || !nodeDest ) then return end
+
+    for i = 1, #nodeSrc.link do
+        local link = nodeSrc.link[i]
+        if ( link.src == nodeDest || link.dest == nodeDest ) then return link end
+    end
+
+    for i = 1, #nodeDest.link do
+        local link = nodeDest.link[i]
+        if ( link.src == nodeSrc || link.dest == nodeSrc ) then return link end
+    end
+end
+
+function conv.aiNodeHasLink(src, dest, nType)
+	return conv.aiNodeGetLink( src, dest, nType ) != nil
+end
+]]

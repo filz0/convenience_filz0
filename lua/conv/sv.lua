@@ -234,3 +234,117 @@ end
 function conv.ScrHCenter(ply)
 	return conv.ScrH(ply) / 2
 end
+
+--[[
+==================================================================================================
+					SKYBOX EDIT
+==================================================================================================
+--]]
+
+-- Creates env_skypaint and sets the skybox texture to "painted" if not set currently
+function conv.createSkyPaint()
+    if CONV_SKYPAINT then return end
+
+    CONV_SKYPAINT = ents.Create( "env_skypaint" )
+
+    if CONV_SKYPAINT then
+        CONV_SKYPAINT:Spawn()
+        CONV_SKYPAINT:Activate()
+
+        CONV_SKYPAINT.TopColor = Vector( 0.220000, 0.510000, 1.000000 )
+        CONV_SKYPAINT.BottomColor = Vector( 0.919000, 0.929000, 0.992000 )
+        CONV_SKYPAINT.FadeBias = 0.10000000149012
+        CONV_SKYPAINT.HDRScale = 0.56000000238419
+
+        CONV_SKYPAINT.StarLayers = 1
+        CONV_SKYPAINT.DrawStars = true
+        CONV_SKYPAINT.StarTexture = "skybox/clouds"
+        CONV_SKYPAINT.StarSpeed = 0.029999999329448
+        CONV_SKYPAINT.StarFade = 0.5
+        CONV_SKYPAINT.StarScale = 2
+
+        CONV_SKYPAINT.DuskIntensity = 2
+        CONV_SKYPAINT.DuskScale = 0.5
+        CONV_SKYPAINT.DuskColor = Vector( 1.000000, 1.000000, 1.000000 )
+
+        CONV_SKYPAINT.SunSize = 0
+        CONV_SKYPAINT.SunColor = Vector( 0.000000, 0.000000, 0.000000 )
+
+        conv.editSkyPaintMain()
+        conv.editSkyPaintStars()
+        conv.editSkyPaintDusk()
+        conv.editSkyPaintSun()
+
+        RunConsoleCommand( "sv_skyname", "painted" )
+    end
+end 
+
+-- Removes user created env_skypaint and restores the original skybox texture. Does nothing to the map spawned env_skypaint
+function conv.removeSkyPaint()
+    if !CONV_SKYPAINT || CONV_DEFAULT_SKYBOX == "painted" then return end
+    CONV_SKYPAINT:Remove()
+    CONV_SKYPAINT = nil
+    RunConsoleCommand( "sv_skyname", CONV_DEFAULT_SKYBOX )
+end
+
+-- Allows to edit main atributes of the env_skypaint
+function conv.editSkyPaintMain( TopColor, BottomColor, FadeBias, HDRScale )
+    if !CONV_SKYPAINT then return end
+    
+    local TopColor = IsColor(TopColor) && TopColor:ToVector() || TopColor
+    local BottomColor = IsColor(BottomColor) && BottomColor:ToVector() || BottomColor
+
+    CONV_SKYPAINT:SetTopColor( TopColor || CONV_SKYPAINT.TopColor )
+	CONV_SKYPAINT:SetBottomColor( BottomColor || CONV_SKYPAINT.BottomColor )
+	CONV_SKYPAINT:SetFadeBias( FadeBias || CONV_SKYPAINT.FadeBias )
+	CONV_SKYPAINT:SetHDRScale( HDRScale || CONV_SKYPAINT.HDRScale )
+end
+
+-- Allows to edit star atributes of the env_skypaint
+function conv.editSkyPaintStars( DrawStars, StarTexture, StarLayers, StarScale, StarFade, StarSpeed )
+    if !CONV_SKYPAINT then return end
+    CONV_SKYPAINT:SetDrawStars( DrawStars || CONV_SKYPAINT.DrawStars )
+    CONV_SKYPAINT:SetStarLayers( StarLayers || CONV_SKYPAINT.StarLayers )
+    CONV_SKYPAINT:SetStarTexture( StarTexture || CONV_SKYPAINT.StarTexture )
+	CONV_SKYPAINT:SetStarScale( StarScale || CONV_SKYPAINT.StarScale )
+    CONV_SKYPAINT:SetStarFade( StarFade || CONV_SKYPAINT.StarFade )
+    CONV_SKYPAINT:SetStarSpeed( StarSpeed || CONV_SKYPAINT.StarSpeed )
+end
+
+-- Allows to edit dusk atributes of the env_skypaint
+function conv.editSkyPaintDusk( DuskIntensity, DuskScale, DuskColor )
+    if !CONV_SKYPAINT then return end
+
+    local DuskColor = IsColor(DuskColor) && DuskColor:ToVector() || DuskColor
+
+    CONV_SKYPAINT:SetDuskIntensity( DuskIntensity || CONV_SKYPAINT.DuskIntensity )
+    CONV_SKYPAINT:SetDuskScale( DuskScale || CONV_SKYPAINT.DuskScale )
+	CONV_SKYPAINT:SetDuskColor( DuskColor || CONV_SKYPAINT.DuskColor )
+end
+
+-- Allows to edit sun atributes of the env_skypaint
+function conv.editSkyPaintSun( SunSize, SunColor )
+    if !CONV_SKYPAINT then return end
+
+    local SunColor = IsColor(SunColor) && SunColor:ToVector() || SunColor
+
+    CONV_SKYPAINT:SetSunSize( SunSize || CONV_SKYPAINT.SunSize )
+	CONV_SKYPAINT:SetSunColor( SunColor || CONV_SKYPAINT.SunColor )
+end
+
+-- Allows you to edit env_sun
+function conv.editEnvSun( SunSize, OverlaySize, SunColor, OverlayColor )
+    if !CONV_ENV_SUN then return end
+
+    local SunColor = isvector(SunColor) && SunColor:ToColor() || SunColor
+    local OverlayColor = isvector(OverlayColor) && OverlayColor:ToColor() || OverlayColor
+
+    CONV_ENV_SUN:SetKeyValue( "size", SunSize || CONV_ENV_SUN.SunSize )
+	CONV_ENV_SUN:SetKeyValue( "overlaysize", OverlaySize || CONV_ENV_SUN.OverlaySize )
+
+    local suncolor = SunColor && Format( "%i %i %i", SunColor.r, SunColor.g, SunColor.b ) || CONV_ENV_SUN.SunColor
+    CONV_ENV_SUN:SetKeyValue( "suncolor", suncolor )
+
+    local overlaycolor = OverlayColor && Format( "%i %i %i", OverlayColor.r, OverlayColor.g, OverlayColor.b ) || CONV_ENV_SUN.OverlayColor
+	CONV_ENV_SUN:SetKeyValue( "overlaycolor", overlaycolor )
+end

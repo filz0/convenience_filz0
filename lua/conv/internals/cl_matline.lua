@@ -68,7 +68,7 @@ local function Render()
 			for j = 1, #ents do
 
 				local ent = ents[ j ]
-							
+						
 				if ( IsValid( ent ) && ent:Alive() ) then
 					
 					render.SetStencilEnable( true )
@@ -118,3 +118,5 @@ hook.Add( "PostDrawEffects", "RenderMatlines", function()
 
 	RenderMatlines()	
 end )
+
+

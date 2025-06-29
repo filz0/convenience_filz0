@@ -20,11 +20,11 @@ if CLIENT then
 		ent = _G[ ent ] || ent != "" && Entity( tonumber(ent) ) 
 		
 		funcN = _G[ funcN ] || funcN
-
+		
 		if isfunction( funcN ) || ent && ent[ funcN ] then
-
+			
 			conv.cocTranslate( ent, funcN, data )
 
 		end
-	end)
+	end) 
 end

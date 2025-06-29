@@ -694,6 +694,12 @@ end
 -- 'Type' is the type of hook, such as "Think"
 -- 'func' is the function to run in the hook. First argument is 'self'.
 -- 'name' is optional and allows multiple hooks of the same type to be added to the ent (if they have different names)
+local addHookFilter = {
+    ['EntityEmitSound'] = function(self, tab) 
+        return !tab[1].Entity || tab[1].Entity != self
+    end,
+}
+
 function ENT:CONV_AddHook( Type, func, name )
     local id = "CONV_EntityHook_"..self:EntIndex().."_"..Type
     if name then id = id .. name end
@@ -703,7 +709,18 @@ function ENT:CONV_AddHook( Type, func, name )
             return
         end
 
-        return func(self, ...)
+        local tab = {...}
+
+        if addHookFilter[Type] && addHookFilter[Type](self, tab) then return end
+
+        for k, v in ipairs( tab ) do 
+            if v == self then
+                table.remove( tab, k )
+                break
+            end 
+        end
+
+        return func(self, unpack(tab))
     end)
 
     self:CallOnRemove("CONV_RemoveHook_"..id, function()
@@ -730,6 +747,25 @@ end
 -- Checks if the NPC has a certain capability
 function NPC:CONV_HasCapability( cap )
     return bit.band(self:CapabilitiesGet(), cap) == cap
+end
+
+-- Used to get the pos, ang && bone of the given hitgroup
+function NPC:CONV_GetHitGroupBone( hg )	
+	local numHitBoxSets = self:GetHitboxSetCount()
+	if numHitBoxSets then
+		for hboxset = 0, numHitBoxSets - 1 do	
+			local numHitBoxes = self:GetHitBoxCount( hboxset )  
+			for hitbox = 0, numHitBoxes - 1 do	
+				if self:GetHitBoxHitGroup( hitbox, hboxset ) == hg then	
+					local bone = self:GetHitBoxBone( hitbox, hboxset )			
+					if ( !bone || bone < 0 ) then return false end			
+					local pos, ang = self:GetBonePosition( bone )
+					return pos, ang, bone			
+				end			
+			end		
+		end	
+	end
+	return nil, -1	
 end
 
 
@@ -830,129 +866,3 @@ function conv.stringToTable( str )
     return tbl
 end
 
-
---[[
-==================================================================================================
-					AI NODEGRAPH
-==================================================================================================
---]]
-
-
--- Returns a table with selected type of nodes
-function conv.aiNodesGet(nType)
-	return ( !nType || nType == 1 ) && CONV_NODES_ALL || nType == 2 && CONV_NODES_GROUND || nType == 3 && CONV_NODES_AIR || nType == 4 && CONV_NODES_CLIMB || nType == 5 && CONV_NODES_WATER
-end
-
--- Ain net version
-function conv.ainGetVersion()
-	return CONV_AINNET_VER
-end
-
--- Map version
-function conv.mapGetVersion()
-	return CONV_MAP_VER
-end
-
--- Returns nodes that are in uhhhh
-function conv.aiNodesFindInSphere(pos, distMin, distMax, nType, visible, nodePosOffset)
-   
-	if !conv.aiNodesGet( nType ) || #conv.aiNodesGet( nType ) == 0 then return end
-
-    local nodes = {}
-    local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
-
-	for i = 1, #conv.aiNodesGet( nType ) do		
-
-        local node = conv.aiNodesGet( nType )[i]
-		local dist = conv.getDistVector( node.pos, pos, true ) 
-        local tr = util.TraceLine({
-            start = pos,
-            endpos = node.pos + nodePosOffset,
-            mask = MASK_SOLID_BRUSHONLY
-		})
-        
-		if dist >= distMin && dist <= distMax && ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then table.insert( nodes, node ) end
-
-	end
-
-    return nodes
-end
-
--- Returns the closest node to the provided position 
-function conv.aiNodeFindClosest(pos, nType, visible, nodePosOffset)
-    if !conv.aiNodesGet( nType ) || #conv.aiNodesGet( nType ) == 0 then return end
-
-	local distClosest = math.huge
-	local nodeClosest
-    local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
-
-	for i = 1, #conv.aiNodesGet( nType ) do		
-
-        local node = conv.aiNodesGet( nType )[i]	
-		local dist = conv.getDistVector( node.pos, pos )
-        local tr = util.TraceLine({
-            start = pos,
-            endpos = node.pos + nodePosOffset,
-            mask = MASK_SOLID_BRUSHONLY
-		})
-        
-		if dist < distClosest && ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then	
-			distClosest = dist
-			nodeClosest = node
-		end
-	end
-
-	return nodeClosest, distClosest 
-end 
-
--- Returns the furthest node to the provided position but not further than set distance
-function conv.aiNodeFindFurthest(pos, distMax, nType, visible, nodePosOffset)
-	if !conv.aiNodesGet( nType ) || #conv.aiNodesGet( nType ) == 0 then return end
-
-	local distFurthest = 0
-	local nodeFurthest
-    distMax = distMax * distMax
-    local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
-
-	for i = 1, #conv.aiNodesGet( nType ) do		
-
-        local node = conv.aiNodesGet( nType )[i]				
-		local dist = conv.getDistVector( node.pos, pos )
-        local tr = util.TraceLine({
-            start = pos,
-            endpos = node.pos + nodePosOffset,
-            mask = MASK_SOLID_BRUSHONLY
-		})
-
-		if dist > distFurthest && dist <= distMax && ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then	
-			distFurthest = dist
-			nodeFurthest = node
-		end
-	end
-
-	return nodeFurthest, distFurthest
-end
-
---[[
-function conv.aiNodeGetLink(src, dest, nType)
-	local nodes = conv.aiNodesGet(nType)
-	local nodeSrc = nodes[src]
-	local nodeDest = nodes[dest]
-
-	if ( !nodeSrc || !nodeDest ) then return end
-
-    for i = 1, #nodeSrc.link do
-        local link = nodeSrc.link[i]
-        if ( link.src == nodeDest || link.dest == nodeDest ) then return link end
-    end
-
-    for i = 1, #nodeDest.link do
-        local link = nodeDest.link[i]
-        if ( link.src == nodeSrc || link.dest == nodeSrc ) then return link end
-    end
-end
-
-function conv.aiNodeHasLink(src, dest, nType)
-	return conv.aiNodeGetLink( src, dest, nType ) != nil
-end
-]]
