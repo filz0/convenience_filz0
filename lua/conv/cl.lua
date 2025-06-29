@@ -4,13 +4,16 @@
 ==================================================================================================
 --]]
 
+local scrWidth = 1920
+local scrHeight = 1080
+
 -- Function used by CallOnClient to translate sent data --
 function conv.cocTranslate( ent, funcN, data )   
 	
 	data = conv.stringToTable( data )	
 	
 	if IsValid(ent) || ent == game.GetWorld() then
-		
+			
 		ent[ funcN ]( ent, unpack( data ) )
 	
 	elseif istable(ent) then
@@ -132,8 +135,6 @@ end
 ==================================================================================================
 --]]
 
-local scrWidth = 1920
-local scrHeight = 1080
 
 -- Used to properly scale position and width of an UI elemet to different screen resolutions.
 function conv.ScrWScale()
@@ -248,5 +249,60 @@ function conv.emitUISound(snd, pitch, vol, channel, sfs, dsp, filter)
 		stopSND()
 
 	end			
+
+end
+
+
+--[[
+==================================================================================================
+					FOG CONTROL
+==================================================================================================
+--]]
+
+-- Setup world fog, set no values to reset
+function conv.setupWorldFog(fogStart, fogEnd, fogMaxDensity, fogColor, fogMode, fogZ)
+
+	if !fogStart && !fogEnd && !fogMaxDensity && !fogColor && !fogMode && !fogZ then 
+		fogMode = 0 
+
+		conv.callNextTick( function() 
+			CONV_FOG_WORLD = nil
+		end )
+	end
+
+	local s, e, z = render.GetFogDistances()
+	local c = { render.GetFogColor() }
+
+	CONV_FOG_WORLD = {}
+	CONV_FOG_WORLD.FogStart			= fogStart || s
+	CONV_FOG_WORLD.FogEnd 			= fogEnd || e
+	CONV_FOG_WORLD.FogMaxDensity 	= fogMaxDensity || 0.5
+	CONV_FOG_WORLD.FogColor 		= fogColor || c
+	CONV_FOG_WORLD.FogMode			= fogMode || 1
+	CONV_FOG_WORLD.FogZ				= fogZ || z
+
+end
+
+-- Setup skybox fog, set no values to reset
+function conv.setupSkyboxFog(fogStart, fogEnd, fogMaxDensity, fogColor, fogMode, fogZ)
+
+	if !fogStart && !fogEnd && !fogMaxDensity && !fogColor && !fogMode && !fogZ then 
+		fogMode = 0 
+
+		conv.callNextTick( function() 
+			CONV_FOG_SKYBOX = nil
+		end )
+	end
+
+	local s, e, z = render.GetFogDistances()
+	local c = { render.GetFogColor() }
+
+	CONV_FOG_SKYBOX = {}
+	CONV_FOG_SKYBOX.FogStart		= fogStart || 0
+	CONV_FOG_SKYBOX.FogEnd 			= fogEnd || 10000
+	CONV_FOG_SKYBOX.FogMaxDensity 	= fogMaxDensity || 0.5
+	CONV_FOG_SKYBOX.FogColor 		= fogColor || c
+	CONV_FOG_SKYBOX.FogMode			= fogMode || 1
+	CONV_FOG_SKYBOX.FogZ			= fogZ || z
 
 end

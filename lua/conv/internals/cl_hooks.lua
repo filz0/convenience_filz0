@@ -54,7 +54,7 @@ end
 local cl_drawhud = GetConVar( "cl_drawhud" )
 local function CONVHUDElements()
 
-	if !table.IsEmpty( CONVHUDElementsTab ) && cl_drawhud:GetBool() then
+	if cl_drawhud:GetBool() then
 		
 		for id, data in pairs( CONVHUDElementsTab ) do
 
@@ -76,5 +76,34 @@ hook.Add("PopulateToolMenu", "CONV", function()
 		for k, v in pairs(conv.toolMenuFuncs) do
 			spawnmenu.AddToolMenuOption(v.tab, v.cat, v.name, v.name, "", "", v.func)
 		end
+	end
+end)
+
+-- Conv fog control
+hook.Add("SetupWorldFog", "CONV", function() 
+	if CONV_FOG_WORLD then
+
+		render.FogStart( CONV_FOG_WORLD.FogStart )
+		render.FogEnd( CONV_FOG_WORLD.FogEnd )
+		render.FogMaxDensity( CONV_FOG_WORLD.FogMaxDensity )
+		render.FogColor( CONV_FOG_WORLD.FogColor[1], CONV_FOG_WORLD.FogColor[2], CONV_FOG_WORLD.FogColor[3] )
+		render.FogMode( CONV_FOG_WORLD.FogMode )		
+		render.SetFogZ( CONV_FOG_WORLD.FogZ )
+
+		return true
+	end
+end)
+
+hook.Add("SetupSkyboxFog", "CONV", function(scale) 
+	if CONV_FOG_SKYBOX then
+
+		render.FogStart( CONV_FOG_SKYBOX.FogStart * scale )
+		render.FogEnd( CONV_FOG_SKYBOX.FogEnd * scale )
+		render.FogMaxDensity( CONV_FOG_SKYBOX.FogMaxDensity )
+		render.FogColor( CONV_FOG_SKYBOX.FogColor[1], CONV_FOG_SKYBOX.FogColor[2], CONV_FOG_SKYBOX.FogColor[3] )
+		render.FogMode( CONV_FOG_SKYBOX.FogMode )		
+		render.SetFogZ( CONV_FOG_SKYBOX.FogZ )
+
+		return true
 	end
 end)

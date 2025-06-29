@@ -25,30 +25,6 @@ local color_gmod = Color( 17, 148, 240, 255 )
 local color_shadow = Color( 0, 0, 0, 200 )
 local color_no = Color( 0, 0, 0, 0 )
 
-local function Derma_TextScroll( self, w, h, buffere, text, font, tColor, sColor )
-    surface.SetFont( font )
-
-    local tW, tH = surface.GetTextSize( text )
-    local px, py = self:LocalToScreen( buffere, 0 )
-    local pw, ph = self:LocalToScreen( w - buffere, h + tH )
-    
-    render.SetScissorRect( px, py, pw, ph, true )
-
-    local x, y = w / 2 - tW / 2, h / 2 - tH / 2
-
-    if ( tW > ( w - buffere * 2 ) ) then
-        local mx, my = self:ScreenToLocal( input.GetCursorPos() )
-        local diff = tW - w + buffere * 2
-
-        x = buffere + math.Remap( math.Clamp( mx, 0, w ), 0, w, 0, -diff )
-    end
-
-    draw.SimpleText( text, font, x + 1, y + 1, sColor || color_shadow )
-    draw.SimpleText( text, font, x, y, tColor || color_white )
-
-    render.SetScissorRect( 0, 0, 0, 0, false )
-end
-
 --[[
 ==================================================================================================
                     CONV MENU FUNCTIONS
@@ -86,7 +62,7 @@ function conv.createMenu( w, h, animDelta, blur, tittle, font, tColor, bgColor, 
         draw.RoundedBoxEx( 10, 0, 0, w, h, bgColor, true, true, true, true )
         draw.RoundedBoxEx( 8, 0, 0, w, hThiccUp, hColor, true, true, false, false )	
 
-		Derma_TextScroll( self, w, 20, 5, isfunction(tittle) && tittle() || tittle, font, tColor, sColor )
+		conv.menuTextScroll( self, w, 20, 5, isfunction(tittle) && tittle() || tittle, font, tColor, sColor )
 
     end
 
@@ -117,6 +93,30 @@ function conv.createMenu( w, h, animDelta, blur, tittle, font, tColor, bgColor, 
     panel.ButtonB = conv.menuButton( panel, buttonW, buttonH, w - buttonW, 0, "✘", font, tColor, hColor, crossFunc )  
 
     return panel
+end
+
+function conv.menuTextScroll( self, w, h, buffere, text, font, tColor, sColor )
+    surface.SetFont( font )
+
+    local tW, tH = surface.GetTextSize( text )
+    local px, py = self:LocalToScreen( buffere, 0 )
+    local pw, ph = self:LocalToScreen( w - buffere, h + tH )
+    
+    render.SetScissorRect( px, py, pw, ph, true )
+
+    local x, y = w / 2 - tW / 2, h / 2 - tH / 2
+
+    if ( tW > ( w - buffere * 2 ) ) then
+        local mx, my = self:ScreenToLocal( input.GetCursorPos() )
+        local diff = tW - w + buffere * 2
+
+        x = buffere + math.Remap( math.Clamp( mx, 0, w ), 0, w, 0, -diff )
+    end
+
+    draw.SimpleText( text, font, x + 1, y + 1, sColor || color_shadow )
+    draw.SimpleText( text, font, x, y, tColor || color_white )
+
+    render.SetScissorRect( 0, 0, 0, 0, false )
 end
 
 function conv.menuScrollBar(panel, sBarColor, sBarGripColor)
@@ -163,8 +163,8 @@ function conv.menuPropertySheet(panel, font, tColor, sColor)
         local colW = Color( tColor.r * 2, tColor.g * 2, tColor.b * 2, 55 )
         Sheet.Tab.Paint = function(self, w, h)     
             
-            Derma_TextScroll( self, w, h, 5, label, font, tColor || color_white, sColor || color_black )
-            if self:IsActive() then Derma_TextScroll( self, w, h, 5, label, font, colW, colW ) end
+            conv.menuTextScroll( self, w, h, 5, label, font, tColor || color_white, sColor || color_black )
+            if self:IsActive() then conv.menuTextScroll( self, w, h, 5, label, font, colW, colW ) end
  
         end
 
@@ -235,9 +235,9 @@ function conv.menuButton(self, w, h, x, y, text, font, tColor, bColor, funcClick
       
         --draw.RoundedBoxEx( r, 0, 0, w, h, col, cornTab[1], cornTab[2], cornTab[3], cornTab[4] )   
         
-        Derma_TextScroll( self, w, h, 5, text, font, tColor )
+        conv.menuTextScroll( self, w, h, 5, text, font, tColor )
 
-        if hover then Derma_TextScroll( self, w, h, 5, text, font, colHover, colHover ) end  
+        if hover then conv.menuTextScroll( self, w, h, 5, text, font, colHover, colHover ) end  
 
     end
 	
