@@ -24,3 +24,8 @@ hook.Add("ScaleNPCDamage", "CONV_COMPATIBILITY", function(npc, hitgroup, dmginfo
     local inflictor = dmginfo:GetInflictor()
     if IsValid(inflictor) then return hook.Run( "NPCDamageScale", inflictor, npc, hitgroup, dmginfo ) end
 end)
+
+hook.Add("PlayerDeath", "CONV_COMPATIBILITY", function(ply, inflictor, attacker) 
+    if IsValid(attacker) then return hook.Run( "PlayerKilled", attacker, ply, inflictor ) end
+    if IsValid(inflictor) then return hook.Run( "PlayerKilled", inflictor, ply, attacker ) end
+end)

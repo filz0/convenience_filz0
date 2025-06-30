@@ -704,23 +704,21 @@ function ENT:CONV_AddHook( Type, func, name )
     local id = "CONV_EntityHook_"..self:EntIndex().."_"..Type
     if name then id = id .. name end
 
+    --self[id] = func
+
     hook.Add(Type, id, function(...)
         if !IsValid(self) then
             return
         end
 
-        local tab = {...}
+        --local tab = {...}
 
-        if addHookFilter[Type] && addHookFilter[Type](self, tab) then return end
+        --if addHookFilter[Type] && addHookFilter[Type](self, tab) then return end
 
-        for k, v in ipairs( tab ) do 
-            if v == self then
-                table.remove( tab, k )
-                break
-            end 
-        end
+        --local tabID = table.Flip( tab )[self]
+        --if tabID then table.remove( tab, tabID ) end
 
-        return func(self, unpack(tab))
+        return func(self, ...)
     end)
 
     self:CallOnRemove("CONV_RemoveHook_"..id, function()
