@@ -694,11 +694,6 @@ end
 -- 'Type' is the type of hook, such as "Think"
 -- 'func' is the function to run in the hook. First argument is 'self'.
 -- 'name' is optional and allows multiple hooks of the same type to be added to the ent (if they have different names)
-local addHookFilter = {
-    ['EntityEmitSound'] = function(self, tab) 
-        return !tab[1].Entity || tab[1].Entity != self
-    end,
-}
 
 function ENT:CONV_AddHook( Type, func, name )
     local id = "CONV_EntityHook_"..self:EntIndex().."_"..Type
@@ -726,6 +721,13 @@ function ENT:CONV_AddHook( Type, func, name )
     end)
 end
 
+-- Checks if a hook of the given type and name exists for this entity
+function ENT:CONV_HookExists( Type, name )
+    local id = "CONV_EntityHook_"..self:EntIndex().."_"..Type
+    if name then id = id .. name end
+
+    return hook.GetTable()[Type] && hook.GetTable()[Type][id] != nil
+end
 
 -- Remove a entity bound hook
 function ENT:CONV_RemoveHook( Type, name )
@@ -734,6 +736,113 @@ function ENT:CONV_RemoveHook( Type, name )
     hook.Remove(Type, id)
 end
 
+-- Returns the number of frames in the given sequence
+-- 'seqID' - The sequence ID, can be obtained with ENT:LookupSequence()
+-- 'animID' - The animation ID, can be obtained with ENT:GetSequenceInfo( seqID )
+-- If animID is not provided, it defaults to the first animation in the sequence
+-- Returns -1 if the sequence or animation does not exist
+function ENT:CONV_SequenceGetFrames( seqID, animID )
+	local animID = self:GetSequenceInfo( seqID ).anims[ animID || 1 ]
+	return self:GetAnimInfo( animID ).numframes || -1
+end
+
+-- Checks if the provided sequence is valid
+-- 'seq' - The sequence ID or name, can be obtained with ENT:LookupSequence()
+-- Returns true if the sequence is valid, false otherwise
+function ENT:CONV_IsValidSequence( seq )    
+    if !isnumber(seq) then
+        seq = self:LookupSequence( seq )
+    end
+
+    return isnumber(seq) && seq > -1 && self:GetSequenceName(seq) != "Unknown"
+end
+
+-- Plays a sequence on the NPC, sets the playback rate and cycle
+-- 'seq' - The sequence ID, can be obtained with ENT:LookupSequence()
+-- 'speed' - The playback speed, defaults to 1
+-- 'cycle' - The cycle to start at, defaults to 0
+-- 'loops' - The number of loops to play, defaults to 0 (no loops), -1 for infinite loops
+-- 'animThink' - A function to call on every frame change, receives the number of loops left and the current frame number
+-- 'callback' - A function to call when the sequence finishes or loops, receives the number of loops left and a boolean indicating if the sequence was interrupted
+function NPC:CONV_PlaySequence( seq, speed, cycle, loops, animThink, callback )
+
+    if !self:CONV_IsValidSequence( seq ) then
+        conv.devPrint( "[ERROR] Invalid sequence provided for NPC: " .. self:GetClass() .. " - " .. seq )
+        return
+    end
+
+    if self:CONV_IsPlayingSequence() then self:CONV_StopSequence() end
+
+    local speed = speed || 1
+    local cycle = cycle || 0
+    local loops = loops || 0
+
+    self:SetNPCState( NPC_STATE_SCRIPT )   
+    self:SetSchedule( SCHED_SCENE_GENERIC ) 
+    self:SetSequence( seq )
+    self:SetCycle( cycle )
+
+    local name = "NPCAnimPlayer" .. self:EntIndex()
+    local seqID = isnumber(seq) && seq || self:LookupSequence( seq )
+    local frames = self:CONV_SequenceGetFrames( seqID )
+    local frameLast = 0
+    local lastTick = CurTime()
+
+    self:CONV_AddHook( "Tick", function()
+        
+        if !IsValid(self) then return end
+        
+        self:SetPlaybackRate( speed )
+        local seqError = self:GetSequence() != seqID     
+
+        if isfunction(animThink) then
+
+            local frameNew = math.floor( self:GetCycle() * frames )
+
+            for frame = frameLast + 1, frameNew do	-- a loop, just in case the think function is too slow to catch all frame changes
+                animThink( loops, frame, frames )
+            end
+
+            frameLast = frameNew
+            
+        end
+
+        if self:IsSequenceFinished() || seqError then
+
+            loops = loops > 0 && loops - 1 || loops
+
+            if ( loops > 0 || loops == -1 ) && !seqError then
+
+                self:ResetSequenceInfo()
+                self:SetCycle( cycle )      
+
+                if isfunction(callback) then callback( loops ) end
+
+            elseif ( !loops || loops == 0 || seqError ) then
+
+                self:CONV_StopSequence() 
+
+                if isfunction(callback) then callback( loops, seqError ) end
+
+            end
+                  
+        end
+
+    end, name )
+end
+
+-- Checks if the NPC is currently playing a sequence
+function NPC:CONV_IsPlayingSequence()
+    local name = "NPCAnimPlayer" .. self:EntIndex()
+    return self:CONV_HookExists( "Tick", name )
+end
+
+-- Stops the currently playing sequence on the NPC
+function NPC:CONV_StopSequence() 
+    self:SetNPCState( NPC_STATE_IDLE )   
+    self:ResetSequenceInfo()
+    self:CONV_RemoveHook( "Tick", "NPCAnimPlayer" .. self:EntIndex() )
+end
 
 --[[
 ==================================================================================================
@@ -745,6 +854,28 @@ end
 -- Checks if the NPC has a certain capability
 function NPC:CONV_HasCapability( cap )
     return bit.band(self:CapabilitiesGet(), cap) == cap
+end
+
+-- Checks if the NPC has a certain condition
+function NPC:CONV_ListConditions()
+
+	if ( !IsValid(self) ) then return end
+
+    local tab = {}
+
+	for c = 0, table.Count( COND ) do
+
+		if ( self:HasCondition( c ) ) then
+
+            local text = self:ConditionName( c ) .. " (" .. c .. ")"
+            table.insert( tab, text )
+
+		end
+		
+	end
+
+    return tab
+
 end
 
 -- Used to get the pos, ang && bone of the given hitgroup

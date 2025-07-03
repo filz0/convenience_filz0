@@ -235,6 +235,11 @@ function conv.ScrHCenter(ply)
 	return conv.ScrH(ply) / 2
 end
 
+function conv.displayOnEntity( name, ent, tab, dur, x, y, xAlign, yAlign )
+    if !ent then return end
+    conv.callOnClient( false, "conv", "displayOnEntity", name, ent, tab, dur, x, y, xAlign, yAlign )
+end
+
 --[[
 ==================================================================================================
 					SKYBOX EDIT

@@ -1,6 +1,6 @@
 --[[
 ==================================================================================================
-                    LOCALS, NO TOUCHY
+                    LOCALS / INTERNAS, NO TOUCHY
 ==================================================================================================
 --]]
 
@@ -8,8 +8,8 @@ local scrWidth = 1920
 local scrHeight = 1080
 
 -- Function used by CallOnClient to translate sent data --
-function conv.cocTranslate( ent, funcN, data )   
-	
+function CONV_INTERNAL_COCTranslate( ent, funcN, data )  
+
 	data = conv.stringToTable( data )	
 	
 	if IsValid(ent) || ent == game.GetWorld() then
@@ -250,6 +250,44 @@ function conv.emitUISound(snd, pitch, vol, channel, sfs, dsp, filter)
 
 	end			
 
+end
+
+-- Used to display text on an entity, useful for debugging or showing information
+function conv.displayOnEntity( name, ent, tab, dur, x, y, xAlign, yAlign )   
+
+	if !ent then return end
+
+	local name = "CONV_DisplayOnEntity" .. name .. ent:EntIndex() || "CONV_DisplayOnEntity" .. ent:EntIndex()
+
+	if !tab then ent:CONV_RemoveHook( "HUDPaint", name ) return end
+
+	local ply = LocalPlayer()
+	local font = "ChatFont"
+	local x = x || 0
+	local y = y || 0
+	local dur = dur && dur < 0.1 && 0.1 || dur
+	local xAlign = xAlign || TEXT_ALIGN_CENTER
+	local yAlign = yAlign || TEXT_ALIGN_TOP
+
+	ent:CONV_AddHook( "HUDPaint", function()
+
+		local pos = ent:GetPos() + ent:OBBCenter() * 2       
+		local sPos = pos:ToScreen()
+		local i = 0
+		
+		for k, v in pairs(tab) do
+
+			i = i + 1
+
+			v = tostring(v)
+
+			if !isnumber(k) then v = k .. " = " .. v end
+
+			draw.SimpleText( v, font, sPos.x + x, sPos.y + ( i * 20 ) + y, color_white, xAlign, yAlign )
+		end
+	end, name )
+
+	if dur then ent:CONV_TimerCreate( name, dur, 1, function() ent:CONV_RemoveHook( "HUDPaint", name ) end ) end
 end
 
 
