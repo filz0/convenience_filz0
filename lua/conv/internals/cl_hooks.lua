@@ -68,6 +68,8 @@ end
 hook.Add("HUDPaint", "CONV", function()
 	CONVScrnMSG()
 	CONVHUDElements()
+	
+	CONV_HUDCurTime = CurTime()
 end)
 
 -- Conv tool menu thing

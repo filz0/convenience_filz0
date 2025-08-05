@@ -474,13 +474,10 @@ end
 ==================================================================================================
 --]]
 
-
-
 function conv.thisEntOrWorld( ent )
     if !IsValid(ent) then return game.GetWorld() end
     return ent
 end
-
 
 -- Runs a check based on a percentage chance
 function conv.pctChance(percent)
@@ -539,7 +536,7 @@ end
 
 -- Helper to check if a number is a float (has decimals)
 function conv.isFloat(n)
-    return isnumber(n) && math.floor(n) != n
+    return n % 1 != 0
 end
 
 --[[
@@ -638,6 +635,8 @@ function ENT:CONV_TimerCreate(name, dur, reps, func, ...)
 
         func(unpack(args))
     end)
+
+    return timerName
 end
 
 
@@ -742,8 +741,10 @@ end
 -- If animID is not provided, it defaults to the first animation in the sequence
 -- Returns -1 if the sequence or animation does not exist
 function ENT:CONV_SequenceGetFrames( seqID, animID )
-	local animID = self:GetSequenceInfo( seqID ).anims[ animID || 1 ]
-	return self:GetAnimInfo( animID ).numframes || -1
+    local seqInfo = self:GetSequenceInfo( seqID )
+    if !seqInfo then return end
+	local animID = seqInfo.anims[ animID || 1 ]
+	return seqInfo.numframes || -1
 end
 
 -- Checks if the provided sequence is valid
@@ -779,7 +780,9 @@ function NPC:CONV_PlaySequence( seq, speed, cycle, loops, animThink, callback )
 
     self:SetNPCState( NPC_STATE_SCRIPT )   
     self:SetSchedule( SCHED_SCENE_GENERIC ) 
+    self:ResetSequenceInfo()  
     self:SetSequence( seq )
+    self:SetPlaybackRate( speed )
     self:SetCycle( cycle )
 
     local name = "NPCAnimPlayer" .. self:EntIndex()
@@ -788,11 +791,12 @@ function NPC:CONV_PlaySequence( seq, speed, cycle, loops, animThink, callback )
     local frameLast = 0
     local lastTick = CurTime()
 
-    self:CONV_AddHook( "Tick", function()
+    self:CONV_AddHook( "Think", function()
         
         if !IsValid(self) then return end
-        
+
         self:SetPlaybackRate( speed )
+        
         local seqError = self:GetSequence() != seqID     
 
         if isfunction(animThink) then
@@ -804,10 +808,10 @@ function NPC:CONV_PlaySequence( seq, speed, cycle, loops, animThink, callback )
             end
 
             frameLast = frameNew
-            
+
         end
 
-        if self:IsSequenceFinished() || seqError then
+        if ( ( self:IsSequenceFinished() ) || seqError ) then
 
             loops = loops > 0 && loops - 1 || loops
 
@@ -834,14 +838,14 @@ end
 -- Checks if the NPC is currently playing a sequence
 function NPC:CONV_IsPlayingSequence()
     local name = "NPCAnimPlayer" .. self:EntIndex()
-    return self:CONV_HookExists( "Tick", name )
+    return self:CONV_HookExists( "Think", name )
 end
 
 -- Stops the currently playing sequence on the NPC
 function NPC:CONV_StopSequence() 
     self:SetNPCState( NPC_STATE_IDLE )   
     self:ResetSequenceInfo()
-    self:CONV_RemoveHook( "Tick", "NPCAnimPlayer" .. self:EntIndex() )
+    self:CONV_RemoveHook( "Think", "NPCAnimPlayer" .. self:EntIndex() )
 end
 
 --[[
@@ -879,6 +883,18 @@ function NPC:CONV_ListConditions()
 end
 
 -- Used to get the pos, ang && bone of the given hitgroup
+-- 'HITGROUP_GENERIC'	0	1:1 damage. Melee weapons and fall damage typically hit this hitgroup. This hitgroup is not present on default player models.
+--                          It is unknown how this is generated in GM:ScalePlayerDamage, but it occurs when shot by NPCs ( npc_combine_s ) for example.
+-- 'HITGROUP_HEAD'	    1	Head
+-- 'HITGROUP_CHEST'	    2	Chest
+-- 'HITGROUP_STOMACH'	3	Stomach
+-- 'HITGROUP_LEFTARM'	4	Left arm
+-- 'HITGROUP_RIGHTARM'	5	Right arm
+-- 'HITGROUP_LEFTLEG'	6	Left leg
+-- 'HITGROUP_RIGHTLEG'	7	Right leg
+-- 'HITGROUP_GEAR'	    10	Gear. Supposed to be belt area.
+--                          This hitgroup is not present on default player models.
+--                          Alerts NPC, but doesn't do damage or bleed (1/100th damage)
 function NPC:CONV_GetHitGroupBone( hg )	
 	local numHitBoxSets = self:GetHitboxSetCount()
 	if numHitBoxSets then

@@ -9,7 +9,6 @@ local Material			= Material
 local CreateMaterial	= CreateMaterial
 local hook				= hook
 local IsValid			= IsValid
-local map_maxsize		= 32768
 
 module( "matline", package.seeall )
 

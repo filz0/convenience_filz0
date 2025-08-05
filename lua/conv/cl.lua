@@ -6,6 +6,7 @@
 
 local scrWidth = 1920
 local scrHeight = 1080
+local cl_drawhud = GetConVar( "cl_drawhud" )
 
 -- Function used by CallOnClient to translate sent data --
 function CONV_INTERNAL_COCTranslate( ent, funcN, data )  
@@ -290,6 +291,211 @@ function conv.displayOnEntity( name, ent, tab, dur, x, y, xAlign, yAlign )
 	if dur then ent:CONV_TimerCreate( name, dur, 1, function() ent:CONV_RemoveHook( "HUDPaint", name ) end ) end
 end
 
+-- Allows to create a status icon that moves around in relation to other icons the same table
+-- 'x, y, w, h' - x pos, y pos, w width, h height.
+-- 'direction' - Sets the direction at which new icons should appear
+-- 1 - left, 2 - right, 3 - up, 4 - down
+-- 'reverseOrder' - If true, notifications are added in the opposite order
+-- 'spacing' - Space between the icons
+-- 'lifeTime' - Time in seconds after which icon will dissapear
+-- 'iconTab - A global table to which all icons will be added to
+-- 'bgPaint' - Icon paint function. It's invisible by default so you should add something here
+-- 'condRemove' - A return function that controls if give icon should remove itself 
+function conv.createHUDStatusIcon(x, y, w, h, direction, reverseOrder, spacing, lifeTime, iconTab, bgPaint, condRemove)
+
+	if !iconTab then return end
+
+	-- Notification panel
+	local panel = vgui.Create( "DNotify" )
+	panel:SetSize( w, h )
+	panel:ParentToHUD()
+
+	local w, h = panel:GetSize()
+	panel:SetLife( lifeTime )
+	
+	-- Gray background panel
+	local panelBG = vgui.Create( "DPanel", panel )
+	panelBG:Dock( FILL )
+
+	-- Inset icon to the provided global table
+	table.insert( iconTab, panelBG )
+
+	-- Set scaled position
+	panel:SetPos( x, y )
+	panel:AddItem( panelBG )
+
+	local baseX, baseY = panel:GetPos()
+	local spacing = spacing || 0
+
+	function panelBG:Paint(w, h)
+		-- Check if we should remove ourselves
+		if isfunction(condRemove) && condRemove( self ) then self:Remove() return end
+		if !conv.isHUDPainted() then return end
+
+		-- Calculate our position using our position in the global table
+		local idx = table.Flip( iconTab )[self] || 1
+		local add = idx - 1
+
+		if reverseOrder then
+			add = ( #iconTab - idx )
+		end
+
+		local px, py = baseX, baseY
+
+		-- Calculate offset based on previous icons' sizes
+		local offsetX, offsetY = 0, 0
+		if direction == 1 then -- left
+
+			for i = idx - 1, 1, -1 do
+
+				local prev = iconTab[i]
+
+				if IsValid(prev) && prev:GetParent() && prev:GetParent():IsValid() then
+					offsetX = offsetX - ( prev:GetParent():GetWide() + spacing )
+				else
+					offsetX = offsetX - ( w + spacing )
+				end
+
+			end
+
+			px = baseX + offsetX
+		elseif direction == 2 then -- right
+
+			for i = 1, idx - 1 do
+
+				local prev = iconTab[i]
+
+				if IsValid(prev) && prev:GetParent() && prev:GetParent():IsValid() then
+					offsetX = offsetX + ( prev:GetParent():GetWide() + spacing )
+				else
+					offsetX = offsetX + ( w + spacing )
+				end
+
+			end
+
+			px = baseX + offsetX
+		elseif direction == 3 then -- up
+
+			for i = idx - 1, 1, -1 do
+
+				local prev = iconTab[i]
+
+				if IsValid(prev) && prev:GetParent() && prev:GetParent():IsValid() then
+					offsetY = offsetY - ( prev:GetParent():GetTall() + spacing )
+				else
+					offsetY = offsetY - ( h + spacing )
+				end
+
+			end
+
+			py = baseY + offsetY
+		elseif direction == 4 then -- down
+
+			for i = 1, idx - 1 do
+
+				local prev = iconTab[i]
+
+				if IsValid(prev) && prev:GetParent() && prev:GetParent():IsValid() then
+					offsetY = offsetY + ( prev:GetParent():GetTall() + spacing )
+				else
+					offsetY = offsetY + ( h + spacing )
+				end
+
+			end
+
+			py = baseY + offsetY
+		elseif direction == 5 then -- vertical spread (up/down from center)
+
+			local mid = math.floor( ( #iconTab + 1 ) / 2 )
+			local myIdx = idx
+
+			for i = 1, #iconTab do
+
+				if i == myIdx then continue end
+
+				local prev = iconTab[i]
+				local sign = ( i < myIdx ) && -1 || 1
+
+				if IsValid(prev) && prev:GetParent() && IsValid(prev:GetParent()) then
+					offsetY = offsetY + sign * ( prev:GetParent():GetTall() + spacing ) / 2
+				else
+					offsetY = offsetY + sign * ( h + spacing ) / 2
+				end
+
+			end
+
+			py = baseY + offsetY
+		elseif direction == 6 then -- horizontal spread (left/right from center)
+
+			local mid = math.floor( ( #iconTab + 1 ) / 2 )
+			local myIdx = idx
+
+			for i = 1, #iconTab do
+
+				if i == myIdx then continue end
+
+				local prev = iconTab[i]
+				local sign = ( i < myIdx ) && -1 || 1
+
+				if IsValid(prev) && prev:GetParent() && IsValid(prev:GetParent()) then
+					offsetX = offsetX + sign * ( prev:GetParent():GetWide() + spacing ) / 2
+				else
+					offsetX = offsetX + sign * ( w + spacing ) / 2
+				end
+
+			end
+
+			px = baseX + offsetX
+		end
+
+		panel:SetPos( px, py )
+
+		-- Call custom paint function
+		bgPaint( self, w, h, px, py )
+	end
+
+	-- Remove our parent as it doesn't do that on its own (bug?) and remove ourselves from the global table
+	function panelBG:OnRemove()		
+		panel:Remove()
+		table.RemoveByValue( iconTab, self )
+	end
+
+	return panel
+end
+
+-- Allows to create HUD elements using derma panels
+-- 'x, y, w, h' - x pos, y pos, w width, h height.
+-- 'bgPaint' - Icon paint function. It's invisible by default so you should add something here
+-- 'condRemove' - A return function that controls if give icon should remove itself 
+function conv.createHUDElement(x, y, w, h, bgPaint, condRemove)
+	
+	-- Creatin UI element
+	local panel = vgui.Create( "DPanel" )
+	panel:ParentToHUD()
+	panel:SetPos( x, y )
+	panel:SetSize( w, h )
+	
+
+	function panel:Paint(w, h)
+
+		-- Check if we should remove ourselves
+		if isfunction(condRemove) and condRemove(self) then self:Remove() return end
+
+		-- Check if HUD is being drawn
+		if !conv.isHUDPainted() then return end
+
+		-- Call custom paint function
+		bgPaint( self, w, h )
+
+	end
+
+	return panel
+end
+
+-- Returns true if 'HUDPaint' is being called or false if it's being blocked by (for an example) SWEP Camera
+function conv.isHUDPainted()
+	return CONV_HUDCurTime >= CurTime() && cl_drawhud:GetBool()
+end
 
 --[[
 ==================================================================================================
@@ -344,3 +550,4 @@ function conv.setupSkyboxFog(fogStart, fogEnd, fogMaxDensity, fogColor, fogMode,
 	CONV_FOG_SKYBOX.FogZ			= fogZ || z
 
 end
+

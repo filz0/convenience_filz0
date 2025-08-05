@@ -5,7 +5,7 @@
 --]]
 
 concommand.Add( "conv_menu_test", function(ply, cmd, args)  
-    local menu = conv.createMenu( 500, 500, 1, true, "Epic Cool Menu For Settings And Other Stuffs", font, Color( 255, 0, 0, 255 ), Color( 0, 255, 0, 255 ), Color( 0, 0, 255, 255 ), tickFunc, crossFunc, "this is a help text ment for helping and shit" )
+    local menu = conv.dermaMenu( 500, 500, 1, true, "Epic Cool Menu For Settings And Other Stuffs", font, Color( 255, 0, 0, 255 ), Color( 0, 255, 0, 255 ), Color( 0, 0, 255, 255 ), tickFunc, crossFunc, "this is a help text ment for helping and shit" )
     
     for i=0, 100 do
         local DButton = menu:Add( "DButton" )
@@ -32,12 +32,13 @@ local color_no = Color( 0, 0, 0, 0 )
 --]]
 
 -- Creates a derma menu with a lot of cool features
-function conv.createMenu( w, h, animDelta, blur, tittle, font, tColor, bgColor, hColor, tickFunc, crossFunc, categories )
+function conv.dermaMenu( w, h, animDelta, blur, tittle, font, tColor, bgColor, hColor, tickFunc, crossFunc, categories )
     bgColor = bgColor || color_white
     hColor = hColor || Color( color_gmod.r, color_gmod.g, color_gmod.b, 255 )
     font = font || "DermaDefaultBold"
 	
     local panel = vgui.Create( "DFrame" )
+    panel:ParentToHUD()
     panel:SetTitle( "" )
     w, h = w || ( 500 * conv.ScrWScale() ), h || ( 500 * conv.ScrHScale() )
     panel:SetSize( w, h )
@@ -62,7 +63,7 @@ function conv.createMenu( w, h, animDelta, blur, tittle, font, tColor, bgColor, 
         draw.RoundedBoxEx( 10, 0, 0, w, h, bgColor, true, true, true, true )
         draw.RoundedBoxEx( 8, 0, 0, w, hThiccUp, hColor, true, true, false, false )	
 
-		conv.menuTextScroll( self, w, 20, 5, isfunction(tittle) && tittle() || tittle, font, tColor, sColor )
+		conv.dermaTextScroll( self, w, 20, 5, isfunction(tittle) && tittle() || tittle, font, tColor, sColor )
 
     end
 
@@ -89,13 +90,13 @@ function conv.createMenu( w, h, animDelta, blur, tittle, font, tColor, bgColor, 
     
     local buttonW, buttonH = 20 * conv.ScrWScale(), 20
 
-    panel.ButtonA = conv.menuButton( panel, buttonW, buttonH, 0, 0, "✔", font, tColor, hColor, tickFunc )
-    panel.ButtonB = conv.menuButton( panel, buttonW, buttonH, w - buttonW, 0, "✘", font, tColor, hColor, crossFunc )  
+    panel.ButtonA = conv.dermaButton( panel, buttonW, buttonH, 0, 0, "✔", font, tColor, hColor, tickFunc )
+    panel.ButtonB = conv.dermaButton( panel, buttonW, buttonH, w - buttonW, 0, "✘", font, tColor, hColor, crossFunc )  
 
     return panel
 end
 
-function conv.menuTextScroll( self, w, h, buffere, text, font, tColor, sColor )
+function conv.dermaTextScroll( self, w, h, buffere, text, font, tColor, sColor )
     surface.SetFont( font )
 
     local tW, tH = surface.GetTextSize( text )
@@ -119,7 +120,7 @@ function conv.menuTextScroll( self, w, h, buffere, text, font, tColor, sColor )
     render.SetScissorRect( 0, 0, 0, 0, false )
 end
 
-function conv.menuScrollBar(panel, sBarColor, sBarGripColor)
+function conv.dermaScrollBar(panel, sBarColor, sBarGripColor)
     local panel = vgui.Create( "DScrollPanel", panel )
     panel:Dock( FILL )
 
@@ -136,7 +137,7 @@ function conv.menuScrollBar(panel, sBarColor, sBarGripColor)
     return panel
 end
 
-function conv.menuPropertySheet(panel, font, tColor, sColor)
+function conv.dermaPropertySheet(panel, font, tColor, sColor)
     local panel = vgui.Create( "DPropertySheet", panel )
     panel:Dock( FILL )
 
@@ -163,8 +164,8 @@ function conv.menuPropertySheet(panel, font, tColor, sColor)
         local colW = Color( tColor.r * 2, tColor.g * 2, tColor.b * 2, 55 )
         Sheet.Tab.Paint = function(self, w, h)     
             
-            conv.menuTextScroll( self, w, h, 5, label, font, tColor || color_white, sColor || color_black )
-            if self:IsActive() then conv.menuTextScroll( self, w, h, 5, label, font, colW, colW ) end
+            conv.dermaTextScroll( self, w, h, 5, label, font, tColor || color_white, sColor || color_black )
+            if self:IsActive() then conv.dermaTextScroll( self, w, h, 5, label, font, colW, colW ) end
  
         end
 
@@ -199,7 +200,7 @@ function conv.menuPropertySheet(panel, font, tColor, sColor)
     return panel
 end
 
-function conv.menuButton(self, w, h, x, y, text, font, tColor, bColor, funcClick)    
+function conv.dermaButton(self, w, h, x, y, text, font, tColor, bColor, funcClick)    
     tColor = tColor || color_white
     bColor = bColor || color_gmod
     r = r || 8
@@ -235,9 +236,9 @@ function conv.menuButton(self, w, h, x, y, text, font, tColor, bColor, funcClick
       
         --draw.RoundedBoxEx( r, 0, 0, w, h, col, cornTab[1], cornTab[2], cornTab[3], cornTab[4] )   
         
-        conv.menuTextScroll( self, w, h, 5, text, font, tColor )
+        conv.dermaTextScroll( self, w, h, 5, text, font, tColor )
 
-        if hover then conv.menuTextScroll( self, w, h, 5, text, font, colHover, colHover ) end  
+        if hover then conv.dermaTextScroll( self, w, h, 5, text, font, colHover, colHover ) end  
 
     end
 	
