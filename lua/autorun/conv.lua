@@ -51,6 +51,7 @@ if !conv then
 
         CONVScrnMSGTab = CONVScrnMSGTab || {}
         CONVHUDElementsTab = CONVHUDElementsTab || {}
+        CONV_HUDCurTime = 0
     end
 
 

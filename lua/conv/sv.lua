@@ -142,8 +142,8 @@ function conv.callOnClient( ply, ent, functionName, ... )
     net.WriteString( ent )
     net.WriteString( functionName )
     net.WriteString( data )
-    
-    if ply && IsValid(ply) && ply:IsPlayer() then
+
+    if ply && ( IsValid(ply) && ply:IsPlayer() || istable(ply) ) then
         net.Send( ply )
     else
         net.Broadcast()
@@ -233,6 +233,11 @@ end
 -- Returns the central point of the vertical axis.
 function conv.ScrHCenter(ply)
 	return conv.ScrH(ply) / 2
+end
+
+function conv.displayOnEntity( name, ent, tab, dur, x, y, xAlign, yAlign )
+    if !ent then return end
+    conv.callOnClient( false, "conv", "displayOnEntity", name, ent, tab, dur, x, y, xAlign, yAlign )
 end
 
 --[[
@@ -348,3 +353,16 @@ function conv.editEnvSun( SunSize, OverlaySize, SunColor, OverlayColor )
     local overlaycolor = OverlayColor && Format( "%i %i %i", OverlayColor.r, OverlayColor.g, OverlayColor.b ) || CONV_ENV_SUN.OverlayColor
 	CONV_ENV_SUN:SetKeyValue( "overlaycolor", overlaycolor )
 end
+
+--[[
+==================================================================================================
+                    DMGINFO UTILITIES
+==================================================================================================
+--]]
+
+function conv.dmgInfoGetDamager(dmginfo)
+    local att = IsValid(dmginfo:GetAttacker()) && dmginfo:GetAttacker()
+    local inf = IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor()
+    local wep = IsValid(dmginfo:GetWeapon()) && dmginfo:GetWeapon()
+    return att || inf || wep
+end 

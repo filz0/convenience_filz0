@@ -10,17 +10,14 @@ hook.Add("OnNPCKilled", "CONV_COMPATIBILITY", function(npc, attacker, inflictor)
 end)
 
 hook.Add("EntityTakeDamage", "CONV_COMPATIBILITY", function(ent, dmginfo) 
-    local attacker = dmginfo:GetAttacker()
-    if IsValid(attacker) then return hook.Run( "EntityDealDamage", attacker, ent, dmginfo ) end
-
-    local inflictor = dmginfo:GetInflictor()
-    if IsValid(inflictor) then return hook.Run( "EntityDealDamage", inflictor, ent, dmginfo ) end
+    if conv.dmgInfoGetDamager(dmginfo) then hook.Run( "EntityDealDamage", conv.dmgInfoGetDamager(dmginfo), ent, dmginfo ) end
 end)
 
 hook.Add("ScaleNPCDamage", "CONV_COMPATIBILITY", function(npc, hitgroup, dmginfo) 
-    local attacker = dmginfo:GetAttacker()
-    if IsValid(attacker) then return hook.Run( "NPCDamageScale", attacker, npc, hitgroup, dmginfo ) end
+    if conv.dmgInfoGetDamager(dmginfo) then hook.Run( "NPCDamageScale", conv.dmgInfoGetDamager(dmginfo), npc, hitgroup, dmginfo ) end
+end)
 
-    local inflictor = dmginfo:GetInflictor()
-    if IsValid(inflictor) then return hook.Run( "NPCDamageScale", inflictor, npc, hitgroup, dmginfo ) end
+hook.Add("PlayerDeath", "CONV_COMPATIBILITY", function(ply, inflictor, attacker) 
+    if IsValid(attacker) then hook.Run( "PlayerKilled", attacker, ply, inflictor ) end
+    if IsValid(inflictor) then hook.Run( "PlayerKilled", inflictor, ply, attacker ) end
 end)

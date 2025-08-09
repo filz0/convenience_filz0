@@ -68,6 +68,8 @@ end
 hook.Add("HUDPaint", "CONV", function()
 	CONVScrnMSG()
 	CONVHUDElements()
+	
+	CONV_HUDCurTime = CurTime()
 end)
 
 -- Conv tool menu thing
@@ -79,7 +81,7 @@ hook.Add("PopulateToolMenu", "CONV", function()
 	end
 end)
 
--- Conv fog control
+-- This is used to set the fog for the world, which is different from the skybox
 hook.Add("SetupWorldFog", "CONV", function() 
 	if CONV_FOG_WORLD then
 
@@ -94,6 +96,7 @@ hook.Add("SetupWorldFog", "CONV", function()
 	end
 end)
 
+-- This is used to set the fog for the skybox, which is different from the world
 hook.Add("SetupSkyboxFog", "CONV", function(scale) 
 	if CONV_FOG_SKYBOX then
 
