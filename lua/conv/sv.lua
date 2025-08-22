@@ -31,7 +31,7 @@ function conv.createSpawnMenuNPC( SpawnMenuClass, pos, wep, beforeSpawnFunc )
 
     -- Check if zbase npc
     local isZBaseNPC = ZBaseInstalled && ZBaseNPCs[SpawnMenuClass]
-    
+
     -- No such NPC
     if !SpawnMenuTable then
         ErrorNoHaltWithStack("No such NPC found: '", SpawnMenuClass, "'\n")
@@ -70,6 +70,11 @@ function conv.createSpawnMenuNPC( SpawnMenuClass, pos, wep, beforeSpawnFunc )
     if SpawnMenuTable.Skin then NPC:SetSkin(SpawnMenuTable.Skin) end
     if SpawnMenuTable.Health then NPC:SetMaxHealth(SpawnMenuTable.Health) NPC:SetHealth(SpawnMenuTable.Health) end
     if SpawnMenuTable.Material then NPC:SetMaterial(SpawnMenuTable.Material) end
+    if SpawnMenuTable.SubMaterials then
+        for k, v in pairs(SpawnMenuTable.SubMaterials) do
+            NPC:SetSubMaterial(k, v)
+        end
+    end
     if SpawnMenuTable.SpawnFlags then NPC:SetKeyValue("spawnflags", SpawnMenuTable.SpawnFlags) end
 
     if isfunction(beforeSpawnFunc) then
@@ -99,29 +104,9 @@ function conv.getEntInfo( cls, func )
 
     conv.callNextTick(function( Ent )
         func(Ent)
-        Ent:Remove()
+        SafeRemoveEntity( Ent )
     end, ent)
 end
-
-
---[[
-==================================================================================================
-                    Spawnflags
-==================================================================================================
---]]
-
-function ENT:CONV_SetSpawnFlags(...)
-    self:SetKeyValue("spawnflags", bit.bor(...))
-end
-
-function ENT:CONV_AddSpawnFlags(...)
-    self:SetKeyValue("spawnflags", bit.bor(self:GetSpawnFlags(), ...))
-end
-
-function ENT:CONV_RemoveSpawnFlags(...)
-    self:SetKeyValue("spawnflags", bit.band(self:GetSpawnFlags(), bit.bnot(...)))
-end
-
 
 --[[
 ==================================================================================================
@@ -129,15 +114,15 @@ end
 ==================================================================================================
 --]]
 
--- Used to call a function on a client from the server -- 
+-- Used to call a function on a client from the server --
 function conv.callOnClient( ply, ent, functionName, ... )
 	if !isstring(functionName) then return end
 
 	local data = {...} || {}
-    
+
     data = conv.tableToString( data )
     ent = IsValid(ent) && tostring( ent:EntIndex() ) || ent || ""
-    
+
     net.Start( "CONV_CallOnClient" )
     net.WriteString( ent )
     net.WriteString( functionName )
@@ -157,7 +142,7 @@ end
 ==================================================================================================
 --]]
 
--- Creates the lua_run entity to be used with related functions -- 
+-- Creates the lua_run entity to be used with related functions --
 function conv.createLuaRun()
 	CONV_LUA_RUN_ENT = ents.Create( "lua_run" )
 	if IsValid(CONV_LUA_RUN_ENT) then
@@ -166,27 +151,27 @@ function conv.createLuaRun()
 	end
 end
 
--- Creates a hook that runs whenever the set entity fires the specified output. -- 
+-- Creates a hook that runs whenever the set entity fires the specified output. --
 function ENT:CONV_CreateOutputHook(entOutput, eventName, delay, repetitions)
 	if !IsValid(CONV_LUA_RUN_ENT) then conv.createLuaRun() end
-	
+
 	delay = delay || 0
 	repetitions = repetitions || -1
-	
+
 	self:Fire( "AddOutput", entOutput .. " CONV_LUA_RUN_ENT:RunPassedCode:hook.Run( '" .. eventName .. "' ):" .. delay .. ":" .. repetitions .. "" )
 end
 
--- Creates a function that runs whenever the set entity fires the specified output. -- 
+-- Creates a function that runs whenever the set entity fires the specified output. --
 function ENT:CONV_CreateOutputFunction(entOutput, func, delay, repetitions)
 	if !self || !IsValid(self) then return end
 	if !IsValid(CONV_LUA_RUN_ENT) then conv.createLuaRun() end
-	
+
 	delay = delay || 0
 	repetitions = repetitions || -1
 
 	local hookID = entOutput .. self:GetClass() .. self:EntIndex()
 
-	hook.Add(hookID, self, function() 
+	hook.Add(hookID, self, function()
 
 		local activator, caller = ACTIVATOR, CALLER
 		func(self, activator, caller)
@@ -282,7 +267,7 @@ function conv.createSkyPaint()
 
         RunConsoleCommand( "sv_skyname", "painted" )
     end
-end 
+end
 
 -- Removes user created env_skypaint and restores the original skybox texture. Does nothing to the map spawned env_skypaint
 function conv.removeSkyPaint()
@@ -295,7 +280,7 @@ end
 -- Allows to edit main atributes of the env_skypaint
 function conv.editSkyPaintMain( TopColor, BottomColor, FadeBias, HDRScale )
     if !CONV_SKYPAINT then return end
-    
+
     local TopColor = IsColor(TopColor) && TopColor:ToVector() || TopColor
     local BottomColor = IsColor(BottomColor) && BottomColor:ToVector() || BottomColor
 
@@ -365,4 +350,4 @@ function conv.dmgInfoGetDamager(dmginfo)
     local inf = IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor()
     local wep = IsValid(dmginfo:GetWeapon()) && dmginfo:GetWeapon()
     return att || inf || wep
-end 
+end
