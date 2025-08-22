@@ -1,4 +1,4 @@
-local Developer = GetConVar("developer")
+local developer = GetConVar("developer")
 local ENT = FindMetaTable("Entity")
 local NPC = FindMetaTable("NPC")
 
@@ -49,6 +49,17 @@ function conv.tickForEach( tbl, func )
     for k, v in ipairs(tbl) do
         conv.callAfterTicks( k, func, k, v )
     end
+end
+
+
+-- Similiar to CONV_TempVar
+-- Set a global to true for some duration before removing it
+-- Calling it again will cause the lifetime of the global to reset
+function conv.tempCond( global_name, lifetime )
+    _G[global_name] = true
+    timer.Create("conv.tempCond_"..global_name, lifetime, 1, function()
+        _G[global_name] = nil
+    end)
 end
 
 
@@ -227,7 +238,7 @@ end
 -- Prints but only if "developer" is more than 1
 -- Also prints to all SuperAdmins on dedicated servers
 function conv.devPrint(...)
-    if Developer:GetInt() < 1 && !(SERVER && game.IsDedicated()) then return end
+    if developer:GetInt() < 1 && !(SERVER && game.IsDedicated()) then return end
 
     if SERVER && game.IsDedicated() then
         for _, superadmin in player.Iterator() do
@@ -276,7 +287,7 @@ end
 --     return {}
 -- end)
 function conv.overlay( funcname, argsFunc )
-    if !Developer:GetBool() then return end
+    if !developer:GetBool() then return end
     local args = argsFunc()
     debugoverlay[funcname](unpack(args))
 end
