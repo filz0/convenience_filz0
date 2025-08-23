@@ -233,11 +233,11 @@ end
 
 -- Creates env_skypaint and sets the skybox texture to "painted" if not set currently
 function conv.createSkyPaint()
-    if CONV_SKYPAINT then return end
+    if IsValid( CONV_SKYPAINT ) then return end
 
     CONV_SKYPAINT = ents.Create( "env_skypaint" )
 
-    if CONV_SKYPAINT then
+    if IsValid( CONV_SKYPAINT ) then
         CONV_SKYPAINT:Spawn()
         CONV_SKYPAINT:Activate()
 
@@ -271,7 +271,7 @@ end
 
 -- Removes user created env_skypaint and restores the original skybox texture. Does nothing to the map spawned env_skypaint
 function conv.removeSkyPaint()
-    if !CONV_SKYPAINT || CONV_DEFAULT_SKYBOX == "painted" then return end
+    if !IsValid( CONV_SKYPAINT ) || CONV_DEFAULT_SKYBOX == "painted" then return end
     CONV_SKYPAINT:Remove()
     CONV_SKYPAINT = nil
     RunConsoleCommand( "sv_skyname", CONV_DEFAULT_SKYBOX )
@@ -279,7 +279,7 @@ end
 
 -- Allows to edit main atributes of the env_skypaint
 function conv.editSkyPaintMain( TopColor, BottomColor, FadeBias, HDRScale )
-    if !CONV_SKYPAINT then return end
+    if !IsValid( CONV_SKYPAINT ) then return end
 
     local TopColor = IsColor(TopColor) && TopColor:ToVector() || TopColor
     local BottomColor = IsColor(BottomColor) && BottomColor:ToVector() || BottomColor
@@ -314,7 +314,7 @@ end
 
 -- Allows to edit sun atributes of the env_skypaint
 function conv.editSkyPaintSun( SunSize, SunColor )
-    if !CONV_SKYPAINT then return end
+    if !IsValid( CONV_SKYPAINT ) then return end
 
     local SunColor = IsColor(SunColor) && SunColor:ToVector() || SunColor
 
@@ -324,10 +324,10 @@ end
 
 -- Allows you to edit env_sun
 function conv.editEnvSun( SunSize, OverlaySize, SunColor, OverlayColor )
-    if !CONV_ENV_SUN then return end
+    if !IsValid( CONV_ENV_SUN ) then return end
 
-    local SunColor = isvector(SunColor) && SunColor:ToColor() || SunColor
-    local OverlayColor = isvector(OverlayColor) && OverlayColor:ToColor() || OverlayColor
+    local SunColor = isvector(SunColor) && SunColor:ToColor() || isstring( SunColor ) && string.ToColor( SunColor ) || SunColor
+    local OverlayColor = isvector(OverlayColor) && OverlayColor:ToColor() || isstring( OverlayColor ) && string.ToColor( OverlayColor ) || OverlayColor
 
     CONV_ENV_SUN:SetKeyValue( "size", SunSize || CONV_ENV_SUN.SunSize )
 	CONV_ENV_SUN:SetKeyValue( "overlaysize", OverlaySize || CONV_ENV_SUN.OverlaySize )
