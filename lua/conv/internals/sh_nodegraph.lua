@@ -6,8 +6,6 @@ NODE_TYPE_WATER = 5
 local SIZEOF_INT = 4
 local SIZEOF_SHORT = 2
 
-local SIZEOF_INT = 4
-local SIZEOF_SHORT = 2
 local AINET_VERSION_NUMBER = 37
 local NUM_HULLS = 10
 local MAX_NODES = 4096
@@ -25,21 +23,21 @@ CONV_NODES_LOOKUP   = CONV_NODES_LOOKUP || {}
 local function toUShort(b)
 
 	local i = { string.byte( b, 1, SIZEOF_SHORT ) }
-	
+
 	return i[1] + i[2] * 256
-	
+
 end
 
 local function toInt(b)
 
 	local i = { string.byte( b, 1, SIZEOF_INT) }
-	
+
 	i = i[1] + i[2] * 256 + i[3] * 65536 + i[4] * 16777216
-	
+
 	if ( i > 2147483647 ) then return i -4294967296 end
-	
+
 	return i
-	
+
 end
 
 local function ReadInt(f) return toInt( f:Read( SIZEOF_INT ) ) end
@@ -98,7 +96,7 @@ function conv.parseNodeFile()
         local nodetype = f:ReadByte()
         local nodeinfo = ReadUShort(f)
         local zone = f:ReadShort()
-        
+
         local node = {
             pos = v,
             --yaw = yaw,
@@ -129,22 +127,22 @@ function conv.parseNodeFile()
         if ( nodesrc && nodedest ) then
             table.insert( nodesrc.neighbor, nodedest )
             nodesrc.numneighbors = nodesrc.numneighbors + 1
-            
+
             nodesrc.numlinks = nodesrc.numlinks + 1
             link.src = nodesrc
             link.srcID = srcID + 1
             table.insert( nodesrc.link, link )
-            
+
             nodedest.numneighbors = nodedest.numneighbors + 1
             table.insert( nodedest.neighbor, nodesrc )
-            
+
             nodedest.numlinks = nodedest.numlinks + 1
             link.dest = nodedest
             link.destID = destID + 1
             table.insert( nodedest.link, link )
 
-        else 
-            MsgN("Unknown link source or destination " .. srcID .. " " .. destID) 
+        else
+            MsgN("Unknown link source or destination " .. srcID .. " " .. destID)
         end
 
         local moves = {}
@@ -208,7 +206,7 @@ end
 -- visible: see aiNodesFindInSphere
 -- posOffset, nodePosOffset: optional offsets
 function conv.aiNodesFindInSphere(pos, distMin, distMax, nType, visible, posOffset, nodePosOffset)
-   
+
 	if !conv.aiNodesGet( nType ) || #conv.aiNodesGet( nType ) == 0 then return end
 
     local nodes = {}
@@ -217,12 +215,12 @@ function conv.aiNodesFindInSphere(pos, distMin, distMax, nType, visible, posOffs
     distMin = distMin * distMin
     distMax = distMax * distMax
 
-	for i = 1, #conv.aiNodesGet( nType ) do		
+	for i = 1, #conv.aiNodesGet( nType ) do
 
         local node = conv.aiNodesGet( nType )[i]
-		local dist = conv.getDistVector( node.pos, pos ) 
-        
-        local tr 
+		local dist = conv.getDistVector( node.pos, pos )
+
+        local tr
         if visible != nil then
             tr = util.TraceLine({
                 start = pos + posOffset,
@@ -232,8 +230,8 @@ function conv.aiNodesFindInSphere(pos, distMin, distMax, nType, visible, posOffs
         end
 
         if ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then
-            if dist >= distMin && dist <= distMax then 
-                nodes[#nodes + 1] = node 
+            if dist >= distMin && dist <= distMax then
+                nodes[#nodes + 1] = node
             end
         end
 	end
@@ -319,7 +317,7 @@ function conv.aiNodesFindInBox(pos, mins, maxs, nType, visible, posOffset, nodeP
     return nodes
 end
 
--- Returns the closest node to the provided position 
+-- Returns the closest node to the provided position
 -- pos: Vector - position to check from
 -- nType: node type
 -- visible: see aiNodesFindInSphere
@@ -332,11 +330,11 @@ function conv.aiNodeFindClosest(pos, nType, visible, posOffset, nodePosOffset)
     local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
     local posOffset = posOffset || Vector( 0, 0, 3 )
 
-	for i = 1, #conv.aiNodesGet( nType ) do		
+	for i = 1, #conv.aiNodesGet( nType ) do
 
-        local node = conv.aiNodesGet( nType )[i]	
+        local node = conv.aiNodesGet( nType )[i]
 		local dist = conv.getDistVector( node.pos, pos )
-        local tr 
+        local tr
         if visible != nil then
             tr = util.TraceLine({
                 start = pos + posOffset,
@@ -345,16 +343,16 @@ function conv.aiNodeFindClosest(pos, nType, visible, posOffset, nodePosOffset)
 		    })
         end
 
-        if ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then      
-            if dist < distClosest then	
+        if ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then
+            if dist < distClosest then
                 distClosest = dist
                 nodeClosest = node
             end
         end
 	end
 
-	return nodeClosest, distClosest 
-end 
+	return nodeClosest, distClosest
+end
 
 -- Returns the furthest node to the provided position but not further than set distance
 -- pos: Vector - position to check from
@@ -371,11 +369,11 @@ function conv.aiNodeFindFurthest(pos, distMax, nType, visible, posOffset, nodePo
     local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
     local posOffset = posOffset || Vector( 0, 0, 3 )
 
-	for i = 1, #conv.aiNodesGet( nType ) do		
+	for i = 1, #conv.aiNodesGet( nType ) do
 
-        local node = conv.aiNodesGet( nType )[i]				
+        local node = conv.aiNodesGet( nType )[i]
 		local dist = conv.getDistVector( node.pos, pos )
-        local tr 
+        local tr
         if visible != nil then
             tr = util.TraceLine({
                 start = pos + posOffset,
@@ -384,9 +382,9 @@ function conv.aiNodeFindFurthest(pos, distMax, nType, visible, posOffset, nodePo
 		    })
         end
 
-        if ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then 
+        if ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then
 
-            if dist > distFurthest && dist <= distMax then	
+            if dist > distFurthest && dist <= distMax then
                 distFurthest = dist
                 nodeFurthest = node
             end
