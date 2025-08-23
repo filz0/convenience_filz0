@@ -353,7 +353,9 @@ end
 --]]
 
 -- Dumps the total size of all workshop addons in GB to the console
-concommand.Add("conv_dump_sv_workshop_gb", function()
+concommand.Add("conv_dump_sv_workshop_gb", function( ply )
+    if !ply:IsAdmin() then return end
+    
     local bytes = 0
     
     for _, addon in ipairs(engine.GetAddons()) do
