@@ -3,23 +3,6 @@ local ENT = FindMetaTable("Entity")
 
 --[[
 ==================================================================================================
-                    DAMAGE
-==================================================================================================
---]]
-
--- Returns an CTakeDamageInfo object with some basic values set
-function conv.damageBasic(damage, dmgtype, pos, attacker)
-    local dmginfo = DamageInfo()
-    dmginfo:SetAttacker(attacker)
-    dmginfo:SetInflictor(attacker)
-    dmginfo:SetDamage(damage)
-    dmginfo:SetDamageType(dmgtype)
-    dmginfo:SetDamagePosition(pos)
-    return dmginfo
-end
-
---[[
-==================================================================================================
                     NPC SPAWNING
 ==================================================================================================
 --]]
@@ -350,4 +333,15 @@ function conv.dmgInfoGetDamager(dmginfo)
     local inf = IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor()
     local wep = IsValid(dmginfo:GetWeapon()) && dmginfo:GetWeapon()
     return att || inf || wep
+end
+
+-- Returns an CTakeDamageInfo object with some basic values set
+function conv.damageBasic(damage, dmgtype, pos, attacker)
+    local dmginfo = DamageInfo()
+    dmginfo:SetAttacker(attacker)
+    dmginfo:SetInflictor(attacker)
+    dmginfo:SetDamage(damage)
+    dmginfo:SetDamageType(dmgtype)
+    dmginfo:SetDamagePosition(pos)
+    return dmginfo
 end
