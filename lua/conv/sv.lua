@@ -357,9 +357,11 @@ concommand.Add("conv_dump_sv_workshop_gb", function()
     local bytes = 0
     
     for _, addon in ipairs(engine.GetAddons()) do
-        bytes = bytes + addon.size
+        if addon.mounted then
+            bytes = bytes + addon.size
+        end
     end
-
+    
     -- Convert to GB
     local gb = bytes / 1024 / 1024 / 1024
     print( "Total Workshop Addons Size: " .. string.format("%.2f", gb) .. " GB" )
