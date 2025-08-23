@@ -563,7 +563,13 @@ function ENT:CONV_CallNextTick( methodnameorfunc, ... )
         if !IsValid(me) then return end
 
         if isstring(methodnameorfunc) then
-            me[methodnameorfunc](me, ...)
+            
+            if isfunction(me[methodnameorfunc]) then
+                me[methodnameorfunc](me, ...)
+            else
+                error("No such method for "..tostring(self)..": '"..methodnameorfunc.."'.")
+            end
+
         elseif isfunction(methodnameorfunc) then
             methodnameorfunc(...)
         else
