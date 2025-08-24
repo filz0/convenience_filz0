@@ -12,15 +12,15 @@ local AINET_VERSION_NUMBER = 37
 local NUM_HULLS = 10
 local MAX_NODES = 4096
 
-CONV_AINNET_VER     = CONV_AINNET_VER || 0
-CONV_MAP_VER        = CONV_MAP_VER || 0
-CONV_NODES_ALL      = CONV_NODES_ALL || {}
-CONV_NODES_GROUND   = CONV_NODES_GROUND || {}
-CONV_NODES_AIR      = CONV_NODES_AIR || {}
-CONV_NODES_CLIMB    = CONV_NODES_CLIMB || {}
-CONV_NODES_WATER    = CONV_NODES_WATER || {}
---CONV_NODES_LINKS    = CONV_NODES_LINKS || {}
-CONV_NODES_LOOKUP   = CONV_NODES_LOOKUP || {}
+CONV_AINNET_VER     = CONV_AINNET_VER or 0
+CONV_MAP_VER        = CONV_MAP_VER or 0
+CONV_NODES_ALL      = CONV_NODES_ALL or {}
+CONV_NODES_GROUND   = CONV_NODES_GROUND or {}
+CONV_NODES_AIR      = CONV_NODES_AIR or {}
+CONV_NODES_CLIMB    = CONV_NODES_CLIMB or {}
+CONV_NODES_WATER    = CONV_NODES_WATER or {}
+--CONV_NODES_LINKS    = CONV_NODES_LINKS or {}
+CONV_NODES_LOOKUP   = CONV_NODES_LOOKUP or {}
 
 local function toUShort(b)
 
@@ -79,7 +79,7 @@ function conv.parseNodeFile()
 
     local numNodes = ReadInt(f)
 
-    if ( numNodes > MAX_NODES || numNodes < 0 ) then
+    if ( numNodes > MAX_NODES or numNodes < 0 ) then
 
         MsgN( "Graph file has an unexpected amount of nodes" )
         return
@@ -126,7 +126,7 @@ function conv.parseNodeFile()
         local nodesrc = CONV_NODES_ALL[ srcID + 1 ]
         local nodedest = CONV_NODES_ALL[ destID + 1 ]
 
-        if ( nodesrc && nodedest ) then
+        if ( nodesrc and nodedest ) then
             table.insert( nodesrc.neighbor, nodedest )
             nodesrc.numneighbors = nodesrc.numneighbors + 1
             
@@ -188,7 +188,7 @@ end
 
 -- Returns a table with selected type of nodes
 function conv.aiNodesGet(nType)
-	return ( !nType || nType == 1 ) && CONV_NODES_ALL || nType == 2 && CONV_NODES_GROUND || nType == 3 && CONV_NODES_AIR || nType == 4 && CONV_NODES_CLIMB || nType == 5 && CONV_NODES_WATER
+	return ( not nType or nType == 1 ) and CONV_NODES_ALL or nType == 2 and CONV_NODES_GROUND or nType == 3 and CONV_NODES_AIR or nType == 4 and CONV_NODES_CLIMB or nType == 5 and CONV_NODES_WATER
 end
 
 -- Ain net version
@@ -209,11 +209,11 @@ end
 -- posOffset, nodePosOffset: optional offsets
 function conv.aiNodesFindInSphere(pos, distMin, distMax, nType, visible, posOffset, nodePosOffset)
    
-	if !conv.aiNodesGet( nType ) || #conv.aiNodesGet( nType ) == 0 then return end
+	if not conv.aiNodesGet( nType ) or #conv.aiNodesGet( nType ) == 0 then return end
 
     local nodes = {}
-    local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
-    local posOffset = posOffset || Vector( 0, 0, 3 )
+    local nodePosOffset = nodePosOffset or Vector( 0, 0, 3 )
+    local posOffset = posOffset or Vector( 0, 0, 3 )
     distMin = distMin * distMin
     distMax = distMax * distMax
 
@@ -231,8 +231,8 @@ function conv.aiNodesFindInSphere(pos, distMin, distMax, nType, visible, posOffs
 		    })
         end
 
-        if ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then
-            if dist >= distMin && dist <= distMax then 
+        if ( visible == true and not tr.HitWorld or visible == false and tr.HitWorld or visible == nil ) then
+            if dist >= distMin and dist <= distMax then 
                 nodes[#nodes + 1] = node 
             end
         end
@@ -249,11 +249,11 @@ end
 -- visible: see aiNodesFindInSphere
 -- posOffset, nodePosOffset: optional offsets
 function conv.aiNodesFindInSphereHeight(pos, distMin, distMax, heightMin, heightMax, nType, visible, posOffset, nodePosOffset)
-    if !conv.aiNodesGet( nType ) || #conv.aiNodesGet( nType ) == 0 then return end
+    if not conv.aiNodesGet( nType ) or #conv.aiNodesGet( nType ) == 0 then return end
 
     local nodes = {}
-    local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
-    local posOffset = posOffset || Vector( 0, 0, 3 )
+    local nodePosOffset = nodePosOffset or Vector( 0, 0, 3 )
+    local posOffset = posOffset or Vector( 0, 0, 3 )
     distMin = distMin * distMin
     distMax = distMax * distMax
 
@@ -272,14 +272,14 @@ function conv.aiNodesFindInSphereHeight(pos, distMin, distMax, heightMin, height
 		    })
         end
 
-        local inDist = horizDist >= distMin && horizDist <= distMax
+        local inDist = horizDist >= distMin and horizDist <= distMax
         local inHeight = true
-        if heightMin || heightMax then
-            inHeight = ( !heightMin || heightDiff >= heightMin ) && ( !heightMax || heightDiff <= heightMax )
+        if heightMin or heightMax then
+            inHeight = ( not heightMin or heightDiff >= heightMin ) and ( not heightMax or heightDiff <= heightMax )
         end
 
-        if ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then
-            if inDist && inHeight then
+        if ( visible == true and not tr.HitWorld or visible == false and tr.HitWorld or visible == nil ) then
+            if inDist and inHeight then
                 nodes[#nodes + 1] = node
             end
         end
@@ -291,8 +291,8 @@ end
 -- Finds all node positions within a box defined by min and max vectors from a given position
 function conv.aiNodesFindInBox(pos, mins, maxs, nType, visible, posOffset, nodePosOffset)
     local nodes = {}
-    local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
-    local posOffset = posOffset || Vector( 0, 0, 3 )
+    local nodePosOffset = nodePosOffset or Vector( 0, 0, 3 )
+    local posOffset = posOffset or Vector( 0, 0, 3 )
     local minVec = pos + mins
     local maxVec = pos + maxs
 
@@ -309,8 +309,8 @@ function conv.aiNodesFindInBox(pos, mins, maxs, nType, visible, posOffset, nodeP
             })
         end
 
-        if ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then
-            if nodePos.x >= minVec.x and nodePos.x <= maxVec.x && nodePos.y >= minVec.y and nodePos.y <= maxVec.y && nodePos.z >= minVec.z and nodePos.z <= maxVec.z then
+        if ( visible == true and not tr.HitWorld or visible == false and tr.HitWorld or visible == nil ) then
+            if nodePos.x >= minVec.x and nodePos.x <= maxVec.x and nodePos.y >= minVec.y and nodePos.y <= maxVec.y and nodePos.z >= minVec.z and nodePos.z <= maxVec.z then
                 nodes[#nodes + 1] = node
             end
         end
@@ -325,12 +325,12 @@ end
 -- visible: see aiNodesFindInSphere
 -- posOffset, nodePosOffset: optional offsets
 function conv.aiNodeFindClosest(pos, nType, visible, posOffset, nodePosOffset)
-    if !conv.aiNodesGet( nType ) || #conv.aiNodesGet( nType ) == 0 then return end
+    if not conv.aiNodesGet( nType ) or #conv.aiNodesGet( nType ) == 0 then return end
 
 	local distClosest = math.huge
 	local nodeClosest
-    local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
-    local posOffset = posOffset || Vector( 0, 0, 3 )
+    local nodePosOffset = nodePosOffset or Vector( 0, 0, 3 )
+    local posOffset = posOffset or Vector( 0, 0, 3 )
 
 	for i = 1, #conv.aiNodesGet( nType ) do		
 
@@ -345,7 +345,7 @@ function conv.aiNodeFindClosest(pos, nType, visible, posOffset, nodePosOffset)
 		    })
         end
 
-        if ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then      
+        if ( visible == true and not tr.HitWorld or visible == false and tr.HitWorld or visible == nil ) then      
             if dist < distClosest then	
                 distClosest = dist
                 nodeClosest = node
@@ -363,13 +363,13 @@ end
 -- visible: see aiNodesFindInSphere
 -- posOffset, nodePosOffset: optional offsets
 function conv.aiNodeFindFurthest(pos, distMax, nType, visible, posOffset, nodePosOffset)
-	if !conv.aiNodesGet( nType ) || #conv.aiNodesGet( nType ) == 0 then return end
+	if not conv.aiNodesGet( nType ) or #conv.aiNodesGet( nType ) == 0 then return end
 
 	local distFurthest = 0
 	local nodeFurthest
     distMax = distMax * distMax
-    local nodePosOffset = nodePosOffset || Vector( 0, 0, 3 )
-    local posOffset = posOffset || Vector( 0, 0, 3 )
+    local nodePosOffset = nodePosOffset or Vector( 0, 0, 3 )
+    local posOffset = posOffset or Vector( 0, 0, 3 )
 
 	for i = 1, #conv.aiNodesGet( nType ) do		
 
@@ -384,9 +384,9 @@ function conv.aiNodeFindFurthest(pos, distMax, nType, visible, posOffset, nodePo
 		    })
         end
 
-        if ( visible == true && !tr.HitWorld || visible == false && tr.HitWorld || visible == nil ) then 
+        if ( visible == true and not tr.HitWorld or visible == false and tr.HitWorld or visible == nil ) then 
 
-            if dist > distFurthest && dist <= distMax then	
+            if dist > distFurthest and dist <= distMax then	
                 distFurthest = dist
                 nodeFurthest = node
             end
@@ -402,16 +402,16 @@ function conv.aiNodeGetLink(src, dest, nType)
 	local nodeSrc = nodes[src]
 	local nodeDest = nodes[dest]
 
-	if ( !nodeSrc || !nodeDest ) then return end
+	if ( not nodeSrc or not nodeDest ) then return end
 
     for i = 1, #nodeSrc.link do
         local link = nodeSrc.link[i]
-        if ( link.src == nodeDest || link.dest == nodeDest ) then return link end
+        if ( link.src == nodeDest or link.dest == nodeDest ) then return link end
     end
 
     for i = 1, #nodeDest.link do
         local link = nodeDest.link[i]
-        if ( link.src == nodeSrc || link.dest == nodeSrc ) then return link end
+        if ( link.src == nodeSrc or link.dest == nodeSrc ) then return link end
     end
 end
 

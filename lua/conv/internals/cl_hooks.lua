@@ -1,7 +1,7 @@
 // INTERNAL, DO NOT USE
 
 local function CONVScrnMSG()
-	if !table.IsEmpty( CONVScrnMSGTab ) then
+	if not table.IsEmpty( CONVScrnMSGTab ) then
  
 		for id, data in pairs( CONVScrnMSGTab ) do
 
@@ -28,11 +28,11 @@ local function CONVScrnMSG()
 
 			if curTime < startTime + fadeIn then
 
-				alpha = fadeIn > 0 && math.Clamp( ( curTime - startTime ) / fadeIn, 0, 1 ) * 255 || 255
+				alpha = fadeIn > 0 and math.Clamp( ( curTime - startTime ) / fadeIn, 0, 1 ) * 255 or 255
 
 			elseif curTime >= startTime + fadeIn + dur then
 				
-				alpha = fadeOut > 0 && math.Clamp( 1 - ( curTime - ( startTime + fadeIn + dur ) ) / fadeOut, 0, 1 ) * 255 || 0
+				alpha = fadeOut > 0 and math.Clamp( 1 - ( curTime - ( startTime + fadeIn + dur ) ) / fadeOut, 0, 1 ) * 255 or 0
 
 				if alpha <= 0 then CONVScrnMSGTab[ id ] = nil end
 

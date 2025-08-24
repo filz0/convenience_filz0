@@ -1,4 +1,5 @@
 local ENT = FindMetaTable("Entity")
+local PLAYER = FindMetaTable("Player")
 
 
 --[[
@@ -30,19 +31,19 @@ function conv.createSpawnMenuNPC( SpawnMenuClass, pos, wep, beforeSpawnFunc )
     local SpawnMenuTable = ents._SpawnMenuNPCs[SpawnMenuClass]
 
     -- Check if zbase npc
-    local isZBaseNPC = ZBaseInstalled && ZBaseNPCs[SpawnMenuClass]
+    local isZBaseNPC = ZBaseInstalled and ZBaseNPCs[SpawnMenuClass]
     
     -- No such NPC
-    if !SpawnMenuTable then
+    if not SpawnMenuTable then
         ErrorNoHaltWithStack("No such NPC found: '", SpawnMenuClass, "'\n")
         return
     end
 
     -- Create NPC
-    local NPC = ents.Create( isZBaseNPC && SpawnMenuClass or SpawnMenuTable.Class )
+    local NPC = ents.Create( isZBaseNPC and SpawnMenuClass or SpawnMenuTable.Class )
 
     -- No such NPC
-    if !IsValid(NPC) then
+    if not IsValid(NPC) then
         ErrorNoHaltWithStack("No such NPC found: '", SpawnMenuTable.Class, "'\n")
         return
     end
@@ -53,7 +54,7 @@ function conv.createSpawnMenuNPC( SpawnMenuClass, pos, wep, beforeSpawnFunc )
     end
 
     -- Default weapons if none if provided
-    wep = wep or (SpawnMenuTable.Weapons && table.Random(SpawnMenuTable.Weapons))
+    wep = wep or (SpawnMenuTable.Weapons and table.Random(SpawnMenuTable.Weapons))
     if isstring(wep) then
         NPC:Give( wep )
     end
@@ -87,7 +88,7 @@ end
 -- Spawns an entity for a short duration allowing you to obtain info about it
 function conv.getEntInfo( cls, func )
     local ent = ents.Create(cls)
-    if !IsValid(ent) then
+    if not IsValid(ent) then
         ErrorNoHaltWithStack("No such ENT found: '", cls, "'\n")
         return
     end
@@ -131,19 +132,19 @@ end
 
 -- Used to call a function on a client from the server -- 
 function conv.callOnClient( ply, ent, functionName, ... )
-	if !isstring(functionName) then return end
+	if not isstring(functionName) then return end
 
-	local data = {...} || {}
+	local data = {...} or {}
     
     data = conv.tableToString( data )
-    ent = IsValid(ent) && tostring( ent:EntIndex() ) || ent || ""
+    ent = IsValid(ent) and tostring( ent:EntIndex() ) or ent or ""
     
     net.Start( "CONV_CallOnClient" )
     net.WriteString( ent )
     net.WriteString( functionName )
     net.WriteString( data )
 
-    if ply && ( IsValid(ply) && ply:IsPlayer() || istable(ply) ) then
+    if ply and ( IsValid(ply) and ply:IsPlayer() or istable(ply) ) then
         net.Send( ply )
     else
         net.Broadcast()
@@ -168,21 +169,21 @@ end
 
 -- Creates a hook that runs whenever the set entity fires the specified output. -- 
 function ENT:CONV_CreateOutputHook(entOutput, eventName, delay, repetitions)
-	if !IsValid(CONV_LUA_RUN_ENT) then conv.createLuaRun() end
+	if not IsValid(CONV_LUA_RUN_ENT) then conv.createLuaRun() end
 	
-	delay = delay || 0
-	repetitions = repetitions || -1
+	delay = delay or 0
+	repetitions = repetitions or -1
 	
 	self:Fire( "AddOutput", entOutput .. " CONV_LUA_RUN_ENT:RunPassedCode:hook.Run( '" .. eventName .. "' ):" .. delay .. ":" .. repetitions .. "" )
 end
 
 -- Creates a function that runs whenever the set entity fires the specified output. -- 
 function ENT:CONV_CreateOutputFunction(entOutput, func, delay, repetitions)
-	if !self || !IsValid(self) then return end
-	if !IsValid(CONV_LUA_RUN_ENT) then conv.createLuaRun() end
+	if not self or not IsValid(self) then return end
+	if not IsValid(CONV_LUA_RUN_ENT) then conv.createLuaRun() end
 	
-	delay = delay || 0
-	repetitions = repetitions || -1
+	delay = delay or 0
+	repetitions = repetitions or -1
 
 	local hookID = entOutput .. self:GetClass() .. self:EntIndex()
 
@@ -236,7 +237,7 @@ function conv.ScrHCenter(ply)
 end
 
 function conv.displayOnEntity( name, ent, tab, dur, x, y, xAlign, yAlign )
-    if !ent then return end
+    if not ent then return end
     conv.callOnClient( false, "conv", "displayOnEntity", name, ent, tab, dur, x, y, xAlign, yAlign )
 end
 
@@ -286,7 +287,7 @@ end
 
 -- Removes user created env_skypaint and restores the original skybox texture. Does nothing to the map spawned env_skypaint
 function conv.removeSkyPaint()
-    if !CONV_SKYPAINT || CONV_DEFAULT_SKYBOX == "painted" then return end
+    if not CONV_SKYPAINT or CONV_DEFAULT_SKYBOX == "painted" then return end
     CONV_SKYPAINT:Remove()
     CONV_SKYPAINT = nil
     RunConsoleCommand( "sv_skyname", CONV_DEFAULT_SKYBOX )
@@ -294,63 +295,63 @@ end
 
 -- Allows to edit main atributes of the env_skypaint
 function conv.editSkyPaintMain( TopColor, BottomColor, FadeBias, HDRScale )
-    if !CONV_SKYPAINT then return end
+    if not CONV_SKYPAINT then return end
     
-    local TopColor = IsColor(TopColor) && TopColor:ToVector() || TopColor
-    local BottomColor = IsColor(BottomColor) && BottomColor:ToVector() || BottomColor
+    local TopColor = IsColor(TopColor) and TopColor:ToVector() or TopColor
+    local BottomColor = IsColor(BottomColor) and BottomColor:ToVector() or BottomColor
 
-    CONV_SKYPAINT:SetTopColor( TopColor || CONV_SKYPAINT.TopColor )
-	CONV_SKYPAINT:SetBottomColor( BottomColor || CONV_SKYPAINT.BottomColor )
-	CONV_SKYPAINT:SetFadeBias( FadeBias || CONV_SKYPAINT.FadeBias )
-	CONV_SKYPAINT:SetHDRScale( HDRScale || CONV_SKYPAINT.HDRScale )
+    CONV_SKYPAINT:SetTopColor( TopColor or CONV_SKYPAINT.TopColor )
+	CONV_SKYPAINT:SetBottomColor( BottomColor or CONV_SKYPAINT.BottomColor )
+	CONV_SKYPAINT:SetFadeBias( FadeBias or CONV_SKYPAINT.FadeBias )
+	CONV_SKYPAINT:SetHDRScale( HDRScale or CONV_SKYPAINT.HDRScale )
 end
 
 -- Allows to edit star atributes of the env_skypaint
 function conv.editSkyPaintStars( DrawStars, StarTexture, StarLayers, StarScale, StarFade, StarSpeed )
-    if !CONV_SKYPAINT then return end
-    CONV_SKYPAINT:SetDrawStars( DrawStars || CONV_SKYPAINT.DrawStars )
-    CONV_SKYPAINT:SetStarLayers( StarLayers || CONV_SKYPAINT.StarLayers )
-    CONV_SKYPAINT:SetStarTexture( StarTexture || CONV_SKYPAINT.StarTexture )
-	CONV_SKYPAINT:SetStarScale( StarScale || CONV_SKYPAINT.StarScale )
-    CONV_SKYPAINT:SetStarFade( StarFade || CONV_SKYPAINT.StarFade )
-    CONV_SKYPAINT:SetStarSpeed( StarSpeed || CONV_SKYPAINT.StarSpeed )
+    if not CONV_SKYPAINT then return end
+    CONV_SKYPAINT:SetDrawStars( DrawStars or CONV_SKYPAINT.DrawStars )
+    CONV_SKYPAINT:SetStarLayers( StarLayers or CONV_SKYPAINT.StarLayers )
+    CONV_SKYPAINT:SetStarTexture( StarTexture or CONV_SKYPAINT.StarTexture )
+	CONV_SKYPAINT:SetStarScale( StarScale or CONV_SKYPAINT.StarScale )
+    CONV_SKYPAINT:SetStarFade( StarFade or CONV_SKYPAINT.StarFade )
+    CONV_SKYPAINT:SetStarSpeed( StarSpeed or CONV_SKYPAINT.StarSpeed )
 end
 
 -- Allows to edit dusk atributes of the env_skypaint
 function conv.editSkyPaintDusk( DuskIntensity, DuskScale, DuskColor )
-    if !CONV_SKYPAINT then return end
+    if not CONV_SKYPAINT then return end
 
-    local DuskColor = IsColor(DuskColor) && DuskColor:ToVector() || DuskColor
+    local DuskColor = IsColor(DuskColor) and DuskColor:ToVector() or DuskColor
 
-    CONV_SKYPAINT:SetDuskIntensity( DuskIntensity || CONV_SKYPAINT.DuskIntensity )
-    CONV_SKYPAINT:SetDuskScale( DuskScale || CONV_SKYPAINT.DuskScale )
-	CONV_SKYPAINT:SetDuskColor( DuskColor || CONV_SKYPAINT.DuskColor )
+    CONV_SKYPAINT:SetDuskIntensity( DuskIntensity or CONV_SKYPAINT.DuskIntensity )
+    CONV_SKYPAINT:SetDuskScale( DuskScale or CONV_SKYPAINT.DuskScale )
+	CONV_SKYPAINT:SetDuskColor( DuskColor or CONV_SKYPAINT.DuskColor )
 end
 
 -- Allows to edit sun atributes of the env_skypaint
 function conv.editSkyPaintSun( SunSize, SunColor )
-    if !CONV_SKYPAINT then return end
+    if not CONV_SKYPAINT then return end
 
-    local SunColor = IsColor(SunColor) && SunColor:ToVector() || SunColor
+    local SunColor = IsColor(SunColor) and SunColor:ToVector() or SunColor
 
-    CONV_SKYPAINT:SetSunSize( SunSize || CONV_SKYPAINT.SunSize )
-	CONV_SKYPAINT:SetSunColor( SunColor || CONV_SKYPAINT.SunColor )
+    CONV_SKYPAINT:SetSunSize( SunSize or CONV_SKYPAINT.SunSize )
+	CONV_SKYPAINT:SetSunColor( SunColor or CONV_SKYPAINT.SunColor )
 end
 
 -- Allows you to edit env_sun
 function conv.editEnvSun( SunSize, OverlaySize, SunColor, OverlayColor )
-    if !CONV_ENV_SUN then return end
+    if not CONV_ENV_SUN then return end
 
-    local SunColor = isvector(SunColor) && SunColor:ToColor() || SunColor
-    local OverlayColor = isvector(OverlayColor) && OverlayColor:ToColor() || OverlayColor
+    local SunColor = isvector(SunColor) and SunColor:ToColor() or SunColor
+    local OverlayColor = isvector(OverlayColor) and OverlayColor:ToColor() or OverlayColor
 
-    CONV_ENV_SUN:SetKeyValue( "size", SunSize || CONV_ENV_SUN.SunSize )
-	CONV_ENV_SUN:SetKeyValue( "overlaysize", OverlaySize || CONV_ENV_SUN.OverlaySize )
+    CONV_ENV_SUN:SetKeyValue( "size", SunSize or CONV_ENV_SUN.SunSize )
+	CONV_ENV_SUN:SetKeyValue( "overlaysize", OverlaySize or CONV_ENV_SUN.OverlaySize )
 
-    local suncolor = SunColor && Format( "%i %i %i", SunColor.r, SunColor.g, SunColor.b ) || CONV_ENV_SUN.SunColor
+    local suncolor = SunColor and Format( "%i %i %i", SunColor.r, SunColor.g, SunColor.b ) or CONV_ENV_SUN.SunColor
     CONV_ENV_SUN:SetKeyValue( "suncolor", suncolor )
 
-    local overlaycolor = OverlayColor && Format( "%i %i %i", OverlayColor.r, OverlayColor.g, OverlayColor.b ) || CONV_ENV_SUN.OverlayColor
+    local overlaycolor = OverlayColor and Format( "%i %i %i", OverlayColor.r, OverlayColor.g, OverlayColor.b ) or CONV_ENV_SUN.OverlayColor
 	CONV_ENV_SUN:SetKeyValue( "overlaycolor", overlaycolor )
 end
 
@@ -361,8 +362,19 @@ end
 --]]
 
 function conv.dmgInfoGetDamager(dmginfo)
-    local att = IsValid(dmginfo:GetAttacker()) && dmginfo:GetAttacker()
-    local inf = IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor()
-    local wep = IsValid(dmginfo:GetWeapon()) && dmginfo:GetWeapon()
-    return att || inf || wep
+    local att = IsValid(dmginfo:GetAttacker()) and dmginfo:GetAttacker()
+    local inf = IsValid(dmginfo:GetInflictor()) and dmginfo:GetInflictor()
+    local wep = IsValid(dmginfo:GetWeapon()) and dmginfo:GetWeapon()
+    return att or inf or wep
 end 
+
+
+--[[
+==================================================================================================
+                    PLAYER UTILITIES
+==================================================================================================
+--]]
+
+function PLAYER:CONV_SetPlayerClass(class)
+    self:SetSaveValue("m_nControlClass", class or 0)
+end

@@ -64,20 +64,20 @@ end
 -- 'postFunc' - Code to run AFTER running the function, passes a table of return values followed by the function arguments,
 --  You can override the return values by returning something else in either of the functions
 function conv.wrapFunc( uniqueID, func, preFunc, postFunc )
-    if !isfunction(func) then
+    if not isfunction(func) then
         error("The function does not exist!")
     end
 
 
     -- Store original func
     conv.wrapFunc_OriginalFuncs = conv.wrapFunc_OriginalFuncs or {}
-    if !conv.wrapFunc_OriginalFuncs[uniqueID] then
+    if not conv.wrapFunc_OriginalFuncs[uniqueID] then
         conv.wrapFunc_OriginalFuncs[uniqueID] = func
     end
 
 
     local ogfunc = conv.wrapFunc_OriginalFuncs[uniqueID]
-    if !isfunction(ogfunc) then
+    if not isfunction(ogfunc) then
         return -- Func was removed?
     end
 
@@ -86,7 +86,7 @@ function conv.wrapFunc( uniqueID, func, preFunc, postFunc )
         if isfunction(preFunc) then
             local returnValuesPre = table.Pack( preFunc( ... ) )
 
-            if istable(returnValuesPre) && !table.IsEmpty(returnValuesPre) then
+            if istable(returnValuesPre) and not table.IsEmpty(returnValuesPre) then
                 return unpack(returnValuesPre)
             end
         end
@@ -97,7 +97,7 @@ function conv.wrapFunc( uniqueID, func, preFunc, postFunc )
         if isfunction(postFunc) then
             local returnValuesPost = table.Pack( postFunc( returnValues, ... ) )
 
-            if !table.IsEmpty(returnValuesPost) then
+            if not table.IsEmpty(returnValuesPost) then
                 return unpack(returnValuesPost)
             end
         end
@@ -112,7 +112,7 @@ end
 
 -- Same as above, but the original function is lost
 function conv.wrapFunc2( func, preFunc, postFunc )
-    if !isfunction(func) then
+    if not isfunction(func) then
         error("The function does not exist!")
     end
 
@@ -127,7 +127,7 @@ function conv.wrapFunc2( func, preFunc, postFunc )
         if isfunction(postFunc) then
             local returnValues = table.Pack( postFunc( returnValues, ... ) )
 
-            if !table.IsEmpty(returnValues) then
+            if not table.IsEmpty(returnValues) then
                 return unpack(returnValues)
             end
         end
@@ -151,9 +151,9 @@ function conv.addFile( File, directory )
 	local prefix = string.lower( string.Left( File, 3 ) )
     local isServerFile = (prefix == "sv_" or File=="sv.lua" or File=="init.lua")
     local isClientFile = (prefix == "cl_" or File=="cl.lua")
-    local isSharedFile = (!isClientFile && !isServerFile)
+    local isSharedFile = (!isClientFile and not isServerFile)
 
-	if isServerFile && SERVER then
+	if isServerFile and SERVER then
 		include( directory .. File )
         return    
     end
@@ -227,9 +227,9 @@ end
 -- Prints but only if "developer" is more than 1
 -- Also prints to all SuperAdmins on dedicated servers
 function conv.devPrint(...)
-    if Developer:GetInt() < 1 && !(SERVER && game.IsDedicated()) then return end
+    if Developer:GetInt() < 1 and not (SERVER and game.IsDedicated()) then return end
 
-    if SERVER && game.IsDedicated() then
+    if SERVER and game.IsDedicated() then
         for _, superadmin in player.Iterator() do
             if superadmin:IsSuperAdmin() then
                 local clprintStr = "[SERVER] "
@@ -255,14 +255,14 @@ function conv.devPrint(...)
     local foundCol = false
     for _, arg in ipairs(args) do
         if IsColor(arg) then
-            MsgC(arg, SERVER && "[SERVER] " or "[CLIENT] ")
+            MsgC(arg, SERVER and "[SERVER] " or "[CLIENT] ")
             foundCol = true
             break
         end
     end
 
-    if !foundCol then
-        MsgC(SERVER && "[SERVER] " or "[CLIENT] ")
+    if not foundCol then
+        MsgC(SERVER and "[SERVER] " or "[CLIENT] ")
     end
 
     MsgC(...)
@@ -276,7 +276,7 @@ end
 --     return {}
 -- end)
 function conv.overlay( funcname, argsFunc )
-    if !Developer:GetBool() then return end
+    if not Developer:GetBool() then return end
     local args = argsFunc()
     debugoverlay[funcname](unpack(args))
 end
@@ -284,7 +284,7 @@ end
 
 -- Prints out information about what a function does
 function conv.help(func)
-    if !isfunction(func) then
+    if not isfunction(func) then
         error("conv.help took an argument that is not a function!")
     end
 
@@ -293,7 +293,7 @@ function conv.help(func)
     local shortSrc = funcinfo.short_src
     local pathShouldStartIdx = string.find(shortSrc, "/lua/")
 
-    if !pathShouldStartIdx then
+    if not pathShouldStartIdx then
         MsgC(Color(155, 0, 0), "No information about this function could be found.\n")
         return
     end
@@ -302,7 +302,7 @@ function conv.help(func)
 
     -- Open the Lua file
     local f = file.Open(luaPath, "r", "LUA")
-    if !f then
+    if not f then
         error("Failed to open Lua file: " .. luaPath)
     end
 
@@ -310,7 +310,7 @@ function conv.help(func)
     local lines = {}
     while true do
         local line = f:ReadLine()
-        if !line then break end
+        if not line then break end
         table.insert(lines, line)
     end
     f:Close()
@@ -370,7 +370,7 @@ function conv.plyCanSeePos( ply, pos )
         mask = MASK_VISIBLE,
     })
 
-    return angleDifference <= ply:GetFOV() && !tr.Hit
+    return angleDifference <= ply:GetFOV() and not tr.Hit
 end
 
 
@@ -403,7 +403,7 @@ end
 -- "col"        -   The color to use
 -- "fSize"      -   The size of the text
 function conv.display3DText( strID, pos, fDuration, strText, col, fSize )
-    if !isstring(strID) then
+    if not isstring(strID) then
         error("Invalid ID for text!")
     end
 
@@ -414,8 +414,8 @@ function conv.display3DText( strID, pos, fDuration, strText, col, fSize )
 
         text:SetPos(pos)
 
-        if isstring(strText) && strText     != text:GetstrText() then   text:SetstrText(strText) end
-        if isnumber(fSize) && fSize         != text:GetfSize() then     text:SetfSize(fSize) end
+        if isstring(strText) and strText     != text:GetstrText() then   text:SetstrText(strText) end
+        if isnumber(fSize) and fSize         != text:GetfSize() then     text:SetfSize(fSize) end
 
         -- Don't update color every microsecond pls it will be unoptimized
         if IsColor(col) then text:SetvecColor(col:ToVector()) end
@@ -423,9 +423,9 @@ function conv.display3DText( strID, pos, fDuration, strText, col, fSize )
         text:resetRemoveTimer(fDuration)
     else
         -- Create new text
-        text = (SERVER && ents.Create("conv_text")) or (CLIENT && ents.CreateClientside("conv_text"))
+        text = (SERVER and ents.Create("conv_text")) or (CLIENT and ents.CreateClientside("conv_text"))
         
-        if !IsValid(text) then
+        if not IsValid(text) then
             error("Failed to create text entity!")
         end
 
@@ -443,7 +443,7 @@ end
 -- Removes a 3D text created with display3DText
 -- "strID"      -   Unique identifier for the text
 function conv.remove3DText(strID)
-    if !isstring(strID) then
+    if not isstring(strID) then
         error("Invalid ID for text!")
     end
     SafeRemoveEntity(conv._3dTexts[strID])
@@ -475,7 +475,7 @@ end
 --]]
 
 function conv.thisEntOrWorld( ent )
-    if !IsValid(ent) then return game.GetWorld() end
+    if not IsValid(ent) then return game.GetWorld() end
     return ent
 end
 
@@ -487,15 +487,15 @@ end
 -- Checks if pos1 is at or closer distance to pos2
 function conv.inDistVector(pos1, pos2, dist)
 
-    if !isvector(pos1) then
+    if not isvector(pos1) then
         error("Pos1 is invalid or no Vector!")
     end
 
-    if !isvector(pos2) then
+    if not isvector(pos2) then
         error("Pos2 is invalid or no Vector!")
     end
 
-    if !isnumber(dist) then
+    if not isnumber(dist) then
         error("No distance provided!")
     end
 
@@ -507,22 +507,22 @@ end
 -- Checks the distance between pos1 and pos2 and returns square distance or root of it
 function conv.getDistVector(pos1, pos2, root)
 
-    if !isvector(pos1) then
+    if not isvector(pos1) then
         error("Pos1 is invalid or no Vector!")
     end
 
-    if !isvector(pos2) then
+    if not isvector(pos2) then
         error("Pos2 is invalid or no Vector!")
     end
 
 	local distTSqr = pos1:DistToSqr( pos2 )
-	local dist = root && math.sqrt( distTSqr ) || distTSqr
+	local dist = root and math.sqrt( distTSqr ) or distTSqr
 	return dist
 end
 
 -- Check duration of the provided sound file
 function conv.getSoundDuration(snd)
-    if !snd then
+    if not snd then
         error("No sound provided!")
     end
 
@@ -549,7 +549,7 @@ end
 -- Call a method for this ent next tick
 function ENT:CONV_CallNextTick( methodnameorfunc, ... )
     local function func( me, ... )
-        if !IsValid(me) then return end
+        if not IsValid(me) then return end
         
         if isstring(methodnameorfunc) then
             me[methodnameorfunc](me, ...)
@@ -592,7 +592,7 @@ function ENT:CONV_TempNetVar( funcName, value, duration )
     local setFuncName = "Set"..funcName
     local getFuncName = "Get"..funcName
 
-    if !self[setFuncName.."NetValBefore"] then
+    if not self[setFuncName.."NetValBefore"] then
         self[setFuncName](name, value)
     end
 
@@ -628,7 +628,7 @@ function ENT:CONV_TimerCreate(name, dur, reps, func, ...)
     local args = table.Pack(...)
     
     timer.Create(timerName, dur, reps, function()
-        if !IsValid(self) then
+        if not IsValid(self) then
             timer.Remove(timerName)
             return
         end
@@ -655,7 +655,7 @@ end
 
 -- Stores the entity in a table, and removes it from said table when the entity is no longer valid
 function ENT:CONV_StoreInTable( tbl )
-    if !istable(tbl) then return end
+    if not istable(tbl) then return end
 
     table.insert(tbl, self)
 
@@ -672,7 +672,7 @@ end
 -- 'value' -    is optional and is 'true' by default
 -- 'key' -      is optional and is the entity by default
 function ENT:CONV_MapInTable( tbl, value, key )
-    if !istable(tbl) then
+    if not istable(tbl) then
         error("Table is invalid!")
     end
 
@@ -701,13 +701,13 @@ function ENT:CONV_AddHook( Type, func, name )
     --self[id] = func
 
     hook.Add(Type, id, function(...)
-        if !IsValid(self) then
+        if not IsValid(self) then
             return
         end
 
         --local tab = {...}
 
-        --if addHookFilter[Type] && addHookFilter[Type](self, tab) then return end
+        --if addHookFilter[Type] and addHookFilter[Type](self, tab) then return end
 
         --local tabID = table.Flip( tab )[self]
         --if tabID then table.remove( tab, tabID ) end
@@ -725,7 +725,7 @@ function ENT:CONV_HookExists( Type, name )
     local id = "CONV_EntityHook_"..self:EntIndex().."_"..Type
     if name then id = id .. name end
 
-    return hook.GetTable()[Type] && hook.GetTable()[Type][id] != nil
+    return hook.GetTable()[Type] and hook.GetTable()[Type][id] != nil
 end
 
 -- Remove a entity bound hook
@@ -742,20 +742,20 @@ end
 -- Returns -1 if the sequence or animation does not exist
 function ENT:CONV_SequenceGetFrames( seqID, animID )
     local seqInfo = self:GetSequenceInfo( seqID )
-    if !seqInfo then return end
-	local animID = seqInfo.anims[ animID || 1 ]
-	return seqInfo.numframes || -1
+    if not seqInfo then return end
+	local animID = seqInfo.anims[ animID or 1 ]
+	return seqInfo.numframes or -1
 end
 
 -- Checks if the provided sequence is valid
 -- 'seq' - The sequence ID or name, can be obtained with ENT:LookupSequence()
 -- Returns true if the sequence is valid, false otherwise
 function ENT:CONV_IsValidSequence( seq )    
-    if !isnumber(seq) then
+    if not isnumber(seq) then
         seq = self:LookupSequence( seq )
     end
 
-    return isnumber(seq) && seq > -1 && self:GetSequenceName(seq) != "Unknown"
+    return isnumber(seq) and seq > -1 and self:GetSequenceName(seq) != "Unknown"
 end
 
 -- Plays a sequence on the NPC, sets the playback rate and cycle
@@ -767,16 +767,16 @@ end
 -- 'callback' - A function to call when the sequence finishes or loops, receives the number of loops left and a boolean indicating if the sequence was interrupted
 function NPC:CONV_PlaySequence( seq, speed, cycle, loops, animThink, callback )
 
-    if !self:CONV_IsValidSequence( seq ) then
+    if not self:CONV_IsValidSequence( seq ) then
         conv.devPrint( "[ERROR] Invalid sequence provided for NPC: " .. self:GetClass() .. " - " .. seq )
         return
     end
 
     if self:CONV_IsPlayingSequence() then self:CONV_StopSequence() end
 
-    local speed = speed || 1
-    local cycle = cycle || 0
-    local loops = loops || 0
+    local speed = speed or 1
+    local cycle = cycle or 0
+    local loops = loops or 0
 
     self:SetNPCState( NPC_STATE_SCRIPT )   
     self:SetSchedule( SCHED_SCENE_GENERIC ) 
@@ -786,14 +786,14 @@ function NPC:CONV_PlaySequence( seq, speed, cycle, loops, animThink, callback )
     self:SetCycle( cycle )
 
     local name = "NPCAnimPlayer" .. self:EntIndex()
-    local seqID = isnumber(seq) && seq || self:LookupSequence( seq )
+    local seqID = isnumber(seq) and seq or self:LookupSequence( seq )
     local frames = self:CONV_SequenceGetFrames( seqID )
     local frameLast = 0
     local lastTick = CurTime()
 
     self:CONV_AddHook( "Think", function()
         
-        if !IsValid(self) then return end
+        if not IsValid(self) then return end
 
         self:SetPlaybackRate( speed )
         
@@ -811,18 +811,18 @@ function NPC:CONV_PlaySequence( seq, speed, cycle, loops, animThink, callback )
 
         end
 
-        if ( ( self:IsSequenceFinished() ) || seqError ) then
+        if ( ( self:IsSequenceFinished() ) or seqError ) then
 
-            loops = loops > 0 && loops - 1 || loops
+            loops = loops > 0 and loops - 1 or loops
 
-            if ( loops > 0 || loops == -1 ) && !seqError then
+            if ( loops > 0 or loops == -1 ) and not seqError then
 
                 self:ResetSequenceInfo()
                 self:SetCycle( cycle )      
 
                 if isfunction(callback) then callback( loops ) end
 
-            elseif ( !loops || loops == 0 || seqError ) then
+            elseif ( not loops or loops == 0 or seqError ) then
 
                 self:CONV_StopSequence() 
 
@@ -863,7 +863,7 @@ end
 -- Checks if the NPC has a certain condition
 function NPC:CONV_ListConditions()
 
-	if ( !IsValid(self) ) then return end
+	if ( not IsValid(self) ) then return end
 
     local tab = {}
 
@@ -882,7 +882,7 @@ function NPC:CONV_ListConditions()
 
 end
 
--- Used to get the pos, ang && bone of the given hitgroup
+-- Used to get the pos, ang and bone of the given hitgroup
 -- 'HITGROUP_GENERIC'	0	1:1 damage. Melee weapons and fall damage typically hit this hitgroup. This hitgroup is not present on default player models.
 --                          It is unknown how this is generated in GM:ScalePlayerDamage, but it occurs when shot by NPCs ( npc_combine_s ) for example.
 -- 'HITGROUP_HEAD'	    1	Head
@@ -903,7 +903,7 @@ function NPC:CONV_GetHitGroupBone( hg )
 			for hitbox = 0, numHitBoxes - 1 do	
 				if self:GetHitBoxHitGroup( hitbox, hboxset ) == hg then	
 					local bone = self:GetHitBoxBone( hitbox, hboxset )			
-					if ( !bone || bone < 0 ) then return false end			
+					if ( not bone or bone < 0 ) then return false end			
 					local pos, ang = self:GetBonePosition( bone )
 					return pos, ang, bone			
 				end			
@@ -921,32 +921,19 @@ end
 --]]
 
 -- Turns the table with keys ['1'], ['2'], ['3'] into a table with keys [1], [2], [3]
-function conv.tablePairsToIPairs( tbl )
-    if tbl['1'] then
+function conv.tablePairsToIPairs(tbl)
+    if not istable(tbl) then return tbl end
 
-        for k, v in SortedPairs(tbl) do
-
-            if istable(v) && v['1'] then
-
-                for k2, v2 in SortedPairs(v) do
-
-                    v[k2] = nil
-                    v[tonumber( k2 )] = v2
-
-                end
-
-            end
-
-            tbl[k] = nil
-            tbl[tonumber( k )] = v
-
-         end
-
-         return tbl
-
-     end
-
-     return tbl
+    local newtbl = {}
+    for k, v in pairs(tbl) do
+        local nk = tonumber(k) or k
+        if istable(v) then
+            newtbl[nk] = conv.tablePairsToIPairs(v)
+        else
+            newtbl[nk] = v
+        end
+    end
+    return newtbl
 end
 
 -- Turns the provided table into a string, respecting all variable types
@@ -970,7 +957,7 @@ function conv.tableToString( tbl )
 
         elseif IsColor(v) then
 
-            str = str .. string.format( "[%q] = Color( %d, %d, %d, %d ),", k, v.r, v.g, v.b, v.a || 255 )
+            str = str .. string.format( "[%q] = Color( %d, %d, %d, %d ),", k, v.r, v.g, v.b, v.a or 255 )
 
 		elseif isvector(v) then
 

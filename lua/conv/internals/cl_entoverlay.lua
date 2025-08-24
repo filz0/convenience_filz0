@@ -10,19 +10,19 @@ local CreateMaterial	= CreateMaterial
 local hook				= hook
 local IsValid			= IsValid
 
-module( "ent_overlay", package.seeall )
+module( "conv_overlay", package.seeall )
 
 local List, ListSize		= {}, 0
 local RenderEnt				= NULL
 
-local ENTS, COLOR, MATERIAL, MATERIALDRAW		= 1, 2, 3, 4
+local ENTS, COLOR, MATERIAL, MATERIALDRAW, CHILDREN		= 1, 2, 3, 4, 5
 
 local mat_overlay = Material( "models/props_combine/cit_beacon" )
 
-function Add( ents, color, material, materialDraw )
-	
+function Add( ents, color, material, materialDraw, include_children )
+
 	if ( ListSize >= 255 ) then return end				--Maximum 255 reference values
-	if ( !istable( ents ) ) then ents = { ents } end	--Support for passing Entity as first argument
+	if ( not istable( ents ) ) then ents = { ents } end	--Support for passing Entity as first argument
 	if ( ents[ 1 ] == nil ) then return end				--Do not pass empty tables
 
 	local data = {
@@ -30,6 +30,7 @@ function Add( ents, color, material, materialDraw )
 		[ COLOR ] = color,
 		[ MATERIAL ] = material,
 		[ MATERIALDRAW ] = materialDraw,
+		[ CHILDREN ] = include_children
 	}
 	
 	ListSize = ListSize + 1
@@ -49,65 +50,124 @@ local vmCrashFix = {
 	IsVMEnt = function(self, class, drawMode)
 		local vm = class == "viewmodel"
 		local hands = class == "gmod_hands"
-		return ( vm && drawMode == 1 || hands && drawMode == 2 ) && !self.antiOverflow || !vm && !hands && drawMode == 0
+		return ( vm and drawMode == 1 or hands and drawMode == 2 ) and not self.antiOverflow or not vm and not hands and drawMode == 0
 	end
 }
 
-local function Render(drawMode, bDrawingDepth, bDrawingSkybox, isDraw3DSkybox)
+local function IsOnScreen(ent)
 
-	if ( bDrawingSkybox || isDraw3DSkybox ) then return end -- Do not render overlays in depth pass or skybox
+	local pos = ent:GetPos()
+	local screenPos = pos:ToScreen()
+	
+	return screenPos.visible
+end
 
-	for i = 1, ListSize do
+local tr = { collisiongroup = COLLISION_GROUP_WORLD, output = {} }
+local function IsInWorld()
 
-		local data = List[ i ]
+	local pos = EyePos()
+	
+	tr.start = pos
+	tr.endpos = pos
 
-		if ( data ) then
+	return util.TraceLine( tr ).HitWorld
+end
 
-			local ents = data[ ENTS ]
-			local color = data[ COLOR ]
-			local material = data[ MATERIAL ]
-			local materialDraw = data[ MATERIALDRAW ]
-			local mat = material || mat_overlay
+local function IsValidScene()
+	local scene = render.GetRenderTarget()
+
+    return scene ~= nil
+end
+
+local function RenderModels(ents, drawMode, children)
+
+	for i = 1, #ents do
+
+		local ent = ents[i]
+
+		if IsValid(ent) then
+
+			if not ent:Alive() then return end
+			if not IsOnScreen(ent) then return end
+			if not vmCrashFix:IsVMEnt(ent:GetClass(), drawMode) then return end
 			
-			if materialDraw then materialDraw(mat) end
+			RenderEnt = ent
 
-			for j = 1, #ents do
+			ent:DrawModel()
 
-				local ent = ents[ j ]
-
-				if ( IsValid( ent ) && ent:Alive() && vmCrashFix:IsVMEnt( ent:GetClass(), drawMode ) ) then
-
-					RenderEnt = ent -- Store the currently rendered entity for later reference		
-					render.UpdateRefractTexture()
-			
-					render.MaterialOverride( mat )					
-
-					render.OverrideDepthEnable( true, false )
-					render.SetColorModulation( color.r / 255, color.g / 255, color.b / 255 )
-					render.SetBlend( color.a / 255 )	
-
-						vmCrashFix.antiOverflow = true -- If missing, game crashes. Guess it doesn't like DrawModel() in post VM or Hands. :(
-						ent:DrawModel()
-					
-					render.SetBlend( 1 )
-					render.SetColorModulation( 1, 1, 1 )
-					render.OverrideDepthEnable( false, false )
-					render.MaterialOverride(0)
-					vmCrashFix.antiOverflow = false
-
-				end
-
+			if children then
+				local childrenmodels = ent:GetChildren()
+				if childrenmodels and #childrenmodels > 0 then RenderModels(childrenmodels, drawMode, children) end
 			end
 
 		end
 
 	end
+	
+end
+
+local function Render(drawMode, bDrawingDepth, bDrawingSkybox, isDraw3DSkybox)
+
+	if ( bDrawingSkybox or isDraw3DSkybox ) then return end -- Do not render overlays in depth pass or skybox
+	if (IsInWorld()) then return end
+	if (IsValidScene()) then return end
+
+	-- Clear out the stencil
+	render.ClearStencil()
+
+	-- Reset everything to known good
+	render.SetStencilWriteMask(0xFF)
+	render.SetStencilTestMask(0xFF)
+	render.SetStencilReferenceValue(0)
+	render.SetStencilCompareFunction(STENCIL_GREATER)
+	render.SetStencilPassOperation(STENCIL_KEEP)
+	render.SetStencilFailOperation(STENCIL_KEEP)
+	render.SetStencilZFailOperation(STENCIL_KEEP)
+
+	for i = 1, ListSize do
+
+		local data = List[ i ]
+		local ents = data[ ENTS ]
+		local color = data[ COLOR ]
+		local material = data[ MATERIAL ]
+		local materialDraw = data[ MATERIALDRAW ]
+		local children = data[ CHILDREN ]
+
+		local mat = material or mat_overlay
+		
+		if materialDraw then materialDraw(mat) end
+
+		render.UpdateRefractTexture()		
+		render.MaterialOverride( mat )					
+		render.OverrideDepthEnable( true, false )
+		render.SetColorModulation( color.r / 255, color.g / 255, color.b / 255 )
+		render.SetBlend( color.a / 255 )	
+
+		vmCrashFix.antiOverflow = true -- If missing, game crashes. Guess it doesn't like DrawModel() in post VM or Hands. :(
+		
+		RenderModels(ents, drawMode, children)
+
+		render.SetBlend( 1 )
+		render.SetColorModulation( 1, 1, 1 )
+		render.OverrideDepthEnable( false, false )
+		render.MaterialOverride(nil)
+
+		vmCrashFix.antiOverflow = false
+
+	end
+
+	RenderEnt = NULL
+
+	render.SetStencilCompareFunction(STENCIL_EQUAL)
+    render.SetStencilZFailOperation(STENCIL_KEEP)
+    render.SetStencilFailOperation(STENCIL_KEEP)
+    render.SetStencilPassOperation(STENCIL_KEEP)
 
 end
 
-local function RenderEntOverlays(drawMode, bDrawingDepth, bDrawingSkybox, isDraw3DSkybox)
-	
-	hook.Run( "SetupEntOverlays", Add )
+local function CONVRenderOverlays(drawMode, bDrawingDepth, bDrawingSkybox, isDraw3DSkybox)
+
+	hook.Run( "CONVSetupOverlays", Add )
 
 	if ( ListSize == 0 ) then return end
 	
@@ -116,27 +176,26 @@ local function RenderEntOverlays(drawMode, bDrawingDepth, bDrawingSkybox, isDraw
 	List, ListSize = {}, 0	
 end
 
-hook.Add( "PostDrawTranslucentRenderables", "RenderEntOverlays", function(bDrawingDepth, bDrawingSkybox, isDraw3DSkybox)
-	
-	RenderEntOverlays(0, bDrawingDepth, bDrawingSkybox, isDraw3DSkybox)	
+hook.Add( "PostDrawTranslucentRenderables", "CONVRenderOverlays", function(bDrawingDepth, bDrawingSkybox, isDraw3DSkybox)	
+	CONVRenderOverlays(0, bDrawingDepth, bDrawingSkybox, isDraw3DSkybox)	
 end )
 
-hook.Add( "PostDrawViewModel", "RenderEntOverlays", function()
-
-	RenderEntOverlays(1)	
+hook.Add( "PreDrawViewModels", "CONVRenderOverlays", function()
+	CONVRenderOverlays(1)	
 end )
 
-hook.Add( "PostDrawPlayerHands", "RenderEntOverlays", function()
-
-	RenderEntOverlays(2)	
+hook.Add( "PostDrawPlayerHands", "CONVRenderOverlays", function()
+	CONVRenderOverlays(2)	
 end )
 
 -- Helper function to apply glowshell effect usint conv.callOnClient
-function conv.addEntOverlay( hookName, ents, color, material )
+function conv.addOverlay( hookName, ents, color, material, include_children )
 
-	hook.Add( "SetupEntOverlays", hookName, function()
+	if not ents and not color and not material and not include_children then hook.Remove( "CONVSetupOverlays", hookName ) return end
 
-		overlay.Add( ents, color, material )
+	hook.Add( "CONVSetupOverlays", hookName, function()
+
+		conv_overlay.Add( ents, color, material, include_children )
 
 	end )
 
