@@ -16,7 +16,7 @@ function conv.createSpawnMenuNPC( spawnMenuCls, pos, wep, beforeSpawnFunc )
     if !spawnMenuTbl && ZBaseInstalled then
         spawnMenuTbl = ZBaseSpawnMenuNPCList[spawnMenuCls]
     end
-    
+
     -- No such npc
     if !spawnMenuTbl then
         error("No such npc found in spawn menu: "..spawnMenuCls)
