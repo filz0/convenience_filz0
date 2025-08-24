@@ -3,72 +3,75 @@ local ENT = FindMetaTable("Entity")
 
 --[[
 ==================================================================================================
-                    NPC SPAWNING
+                    npc SPAWNING
 ==================================================================================================
 --]]
 
--- Spawn a NPC from the spawn menu
-function conv.createSpawnMenuNPC( SpawnMenuClass, pos, wep, beforeSpawnFunc )
-    -- Find NPC in spawn menu
-    local SpawnMenuTable = list.Get("NPC")[SpawnMenuClass]
+-- Spawn an NPC via its spawn menu attributes.
+function conv.createSpawnMenuNPC( spawnMenuCls, pos, wep, beforeSpawnFunc )
+    -- Find npc in spawn menu
+    local spawnMenuTbl = list.GetForEdit("NPC")[spawnMenuCls]
 
-    -- Check if zbase npc
-    local isZBaseNPC = ZBaseInstalled && ZBaseNPCs[SpawnMenuClass]
-
-    -- No such NPC
-    if !SpawnMenuTable then
-        ErrorNoHaltWithStack("No such NPC found: '", SpawnMenuClass, "'\n")
-        return
+    -- Check in zbase npcs if any
+    if !spawnMenuTbl && ZBaseInstalled then
+        spawnMenuTbl = ZBaseSpawnMenuNPCList[spawnMenuCls]
+    end
+    
+    -- No such npc
+    if !spawnMenuTbl then
+        error("No such npc found in spawn menu: "..spawnMenuCls)
     end
 
-    -- Create NPC
-    local NPC = ents.Create( isZBaseNPC && SpawnMenuClass or SpawnMenuTable.Class )
+    -- Create npc
+    local npc = ents.Create( spawnMenuTbl.SpawnMenuZBaseClass or spawnMenuTbl.Class )
 
-    -- No such NPC
-    if !IsValid(NPC) then
-        ErrorNoHaltWithStack("No such NPC found: '", SpawnMenuTable.Class, "'\n")
-        return
+    -- No such npc
+    if !IsValid(npc) then
+        error("No such entity could be created: "..spawnMenuCls)
     end
 
     -- Position
     if isvector(pos) then
-        NPC:SetPos(pos)
+        npc:SetPos(pos)
     end
 
     -- Default weapons if none if provided
-    wep = wep or (SpawnMenuTable.Weapons && table.Random(SpawnMenuTable.Weapons))
+    wep = wep or (spawnMenuTbl.Weapons && table.Random(spawnMenuTbl.Weapons))
     if isstring(wep) then
-        NPC:Give( wep )
+        npc:Give( wep )
     end
 
     -- Key values
-    if SpawnMenuTable.KeyValues then
-        for key, value in pairs(SpawnMenuTable.KeyValues) do
-            NPC:SetKeyValue(key, value)
+    if spawnMenuTbl.KeyValues then
+        for key, value in pairs(spawnMenuTbl.KeyValues) do
+            npc:SetKeyValue(key, value)
         end
     end
 
     -- Set stuff
-    if SpawnMenuTable.Model then NPC:SetModel(SpawnMenuTable.Model) end
-    if SpawnMenuTable.Skin then NPC:SetSkin(SpawnMenuTable.Skin) end
-    if SpawnMenuTable.Health then NPC:SetMaxHealth(SpawnMenuTable.Health) NPC:SetHealth(SpawnMenuTable.Health) end
-    if SpawnMenuTable.Material then NPC:SetMaterial(SpawnMenuTable.Material) end
-    if SpawnMenuTable.SubMaterials then
-        for k, v in pairs(SpawnMenuTable.SubMaterials) do
-            NPC:SetSubMaterial(k, v)
+    if spawnMenuTbl.Model then npc:SetModel(spawnMenuTbl.Model) end
+    if spawnMenuTbl.Skin then npc:SetSkin(spawnMenuTbl.Skin) end
+    if spawnMenuTbl.Health then 
+        npc:SetMaxHealth(spawnMenuTbl.Health) 
+        npc:SetHealth(spawnMenuTbl.Health) 
+    end
+    if spawnMenuTbl.Material then npc:SetMaterial(spawnMenuTbl.Material) end
+    if spawnMenuTbl.SubMaterials then
+        for k, v in pairs(spawnMenuTbl.SubMaterials) do
+            npc:SetSubMaterial(k, v)
         end
     end
-    if SpawnMenuTable.SpawnFlags then NPC:SetKeyValue("spawnflags", SpawnMenuTable.SpawnFlags) end
+    if spawnMenuTbl.SpawnFlags then npc:SetKeyValue("spawnflags", spawnMenuTbl.SpawnFlags) end
 
     if isfunction(beforeSpawnFunc) then
-        beforeSpawnFunc( NPC )
+        beforeSpawnFunc( npc )
     end
 
     -- Spawn and Activate
-    NPC:Spawn()
-    NPC:Activate()
+    npc:Spawn()
+    npc:Activate()
 
-    return NPC
+    return npc
 end
 
 
