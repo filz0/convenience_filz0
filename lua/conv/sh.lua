@@ -669,6 +669,18 @@ end
 ==================================================================================================
 --]]
 
+-- Try get a human-readable name of an entity
+function ENT:CONV_GetName()
+    -- Player name
+    if self:IsPlayer() then
+        return self:GetName()
+    end
+
+    return string.NiceName(
+                string.TrimLeft(self.PrintName || (SERVER && hook.Run("GetDeathNoticeEntityName", self)) || self:GetClass() 
+                    , "#"))
+end
+
 
 -- Stores the entity in a table, and removes it from said table when the entity is no longer valid
 function ENT:CONV_StoreInTable( tbl )
