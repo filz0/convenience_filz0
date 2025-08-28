@@ -557,7 +557,9 @@ end
 --]]
 
 
--- Call a method for this ent next tick
+-- Call a method or function for this ent next tick
+-- If the ent is invalid next tick, this does nothing
+-- Same goes if you passed a string method name and the ent does not have it
 function ENT:CONV_CallNextTick( methodnameorfunc, ... )
     local function func( me, ... )
         if !IsValid(me) then return end
@@ -566,8 +568,6 @@ function ENT:CONV_CallNextTick( methodnameorfunc, ... )
             
             if isfunction(me[methodnameorfunc]) then
                 me[methodnameorfunc](me, ...)
-            else
-                error("No such method for "..tostring(self)..": '"..methodnameorfunc.."'.")
             end
 
         elseif isfunction(methodnameorfunc) then
