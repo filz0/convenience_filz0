@@ -387,18 +387,6 @@ end
 
 --[[
 ==================================================================================================
-                    NPC SPAWNING
-==================================================================================================
---]]
-
-
-function conv.getSpawnMenuNPCs()
-    return conv._SpawnMenuNPCs
-end
-
-
---[[
-==================================================================================================
                     COMMUNICATION / INFO / TEXT / HINT / HELP UTILITIES
 ==================================================================================================
 --]]
@@ -478,21 +466,20 @@ function conv.sendGModHint( ply, strMsg, iType, fDuration )
     end
 end
 
-
 --[[
 ==================================================================================================
-                    OTHER CONVENIENT
+                    MATH
 ==================================================================================================
 --]]
-
-function conv.thisEntOrWorld( ent )
-    if !IsValid(ent) then return game.GetWorld() end
-    return ent
-end
 
 -- Runs a check based on a percentage chance
 function conv.pctChance(percent)
     return math.random() * 100 <= percent
+end
+
+-- Helper to check if a number is a float (has decimals)
+function conv.isFloat(n)
+    return n % 1 != 0
 end
 
 -- Checks if pos1 is at or closer distance to pos2
@@ -529,25 +516,6 @@ function conv.getDistVector(pos1, pos2, root)
 	local distTSqr = pos1:DistToSqr( pos2 )
 	local dist = root && math.sqrt( distTSqr ) || distTSqr
 	return dist
-end
-
--- Check duration of the provided sound file
-function conv.getSoundDuration(snd)
-    if !snd then
-        error("No sound provided!")
-    end
-
-    local sounddur = SoundDuration( snd )
-	if sounddur then
-		sounddur = math.Round( sounddur * 1000 ) / 1000
-	end
-
-    return sounddur
-end
-
--- Helper to check if a number is a float (has decimals)
-function conv.isFloat(n)
-    return n % 1 != 0
 end
 
 --[[
@@ -1038,4 +1006,33 @@ function conv.stringToTable( str )
     tbl = conv.tablePairsToIPairs( tbl )
 
     return tbl
+end
+
+--[[
+==================================================================================================
+                    OTHER CONVENIENT
+==================================================================================================
+--]]
+
+function conv.getSpawnMenuNPCs()
+    return conv._SpawnMenuNPCs
+end
+
+function conv.thisEntOrWorld( ent )
+    if !IsValid(ent) then return game.GetWorld() end
+    return ent
+end
+
+-- Check duration of the provided sound file
+function conv.getSoundDuration(snd)
+    if !snd then
+        error("No sound provided!")
+    end
+
+    local sounddur = SoundDuration( snd )
+	if sounddur then
+		sounddur = math.Round( sounddur * 1000 ) / 1000
+	end
+
+    return sounddur
 end
