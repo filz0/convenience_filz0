@@ -75,8 +75,8 @@ end)
  
 -- Show information about the player's frames, frame times, ping, etc. conv_telemetry <1/0> <x> <y>
 concommand.Add( "conv_telemetry", function(ply, cmd, args)  
-	local enable = tonumber(args[1]) > 0
-	
+	local enable = args[1] and tonumber(args[1]) > 0
+
 	conv.addHUDElement("conv_telemetry", enable, function() 
 		local ply = LocalPlayer()
 		local w, h = 200, 100

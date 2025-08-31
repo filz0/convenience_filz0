@@ -249,7 +249,7 @@ end
 local materialDebugWhite = Material("models/debug/debugwhite")
 local cvMaterialAntialias = GetConVar("mat_antialias")
 local function Render()
-
+    
     if (IsInWorld()) then return end
 
     local scene = render.GetRenderTarget()
@@ -258,7 +258,7 @@ local function Render()
     if scene ~= nil then
         return
     end
-
+    
     -- Copy the current RT to another RT so we can restore this later on
     -- the way the drawing of this library works is as follows:
     -- 1. Store Current Screen in the "store" rendertarget.
@@ -329,9 +329,8 @@ local function Render()
             )
             render.SetStencilFailOperation(STENCIL_KEEP)
             render.SetStencilPassOperation(STENCIL_REPLACE)
-
+            
             RenderModels(render_ents, render_children)
-
         elseif mode == OUTLINE_MODE_NOTVISIBLE then
             -- Setup the stencil for 2-pass rendering where we first determine what is hidden and then what is shown to prevent self z-fail
             render.SetStencilCompareFunction(STENCIL_GREATER)
