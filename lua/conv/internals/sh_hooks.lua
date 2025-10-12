@@ -13,7 +13,7 @@ end)
 
 hook.Add("InitPostEntity", "CONV", function()
     if SERVER then
-        
+
         conv.createLuaRun()
 
         CONV_DEFAULT_SKYBOX = GetConVar("sv_skyname"):GetString()
@@ -44,7 +44,7 @@ hook.Add("InitPostEntity", "CONV", function()
 
     CONV_ENV_SUN = ents.FindByClass( "env_sun" )[1]
 
-    if CONV_ENV_SUN then
+    if IsValid( CONV_ENV_SUN ) then
         local data = CONV_ENV_SUN:GetKeyValues()
         CONV_ENV_SUN.SunSize = data.size
         CONV_ENV_SUN.OverlaySize = data.overlaysize
@@ -75,8 +75,8 @@ end )
 ==================================================================================================
 --]]
 
-hook.Add("OnEntityCreated", "CONV_COMPATIBILITY", function( ent ) 
-    ent:CONV_CallNextTick( function() 
+hook.Add("OnEntityCreated", "CONV_COMPATIBILITY", function( ent )
+    ent:CONV_CallNextTick( function()
         local owner = ent:GetOwner()
         if IsValid(owner) then hook.Run( "OnCreatedEntity", owner, ent ) end
     end )

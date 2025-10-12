@@ -4,84 +4,75 @@ local PLAYER = FindMetaTable("Player")
 
 --[[
 ==================================================================================================
-                    DAMAGE
+                    npc SPAWNING
 ==================================================================================================
 --]]
 
--- Returns an CTakeDamageInfo object with some basic values set
-function conv.damageBasic(damage, dmgtype, pos, attacker)
-    local dmginfo = DamageInfo()
-    dmginfo:SetAttacker(attacker)
-    dmginfo:SetInflictor(attacker)
-    dmginfo:SetDamage(damage)
-    dmginfo:SetDamageType(dmgtype)
-    dmginfo:SetDamagePosition(pos)
-    return dmginfo
-end
+-- Spawn an NPC via its spawn menu attributes.
+function conv.createSpawnMenuNPC( spawnMenuCls, pos, wep, beforeSpawnFunc )
+    -- Find npc in spawn menu
+    local spawnMenuTbl = list.GetForEdit("NPC")[spawnMenuCls]
 
---[[
-==================================================================================================
-                    NPC SPAWNING
-==================================================================================================
---]]
-
--- Spawn a NPC from the spawn menu
-function conv.createSpawnMenuNPC( SpawnMenuClass, pos, wep, beforeSpawnFunc )
-    -- Find NPC in spawn menu
-    local SpawnMenuTable = ents._SpawnMenuNPCs[SpawnMenuClass]
-
-    -- Check if zbase npc
-    local isZBaseNPC = ZBaseInstalled and ZBaseNPCs[SpawnMenuClass]
-    
-    -- No such NPC
-    if not SpawnMenuTable then
-        ErrorNoHaltWithStack("No such NPC found: '", SpawnMenuClass, "'\n")
-        return
+    -- Check in zbase npcs if any
+    if !spawnMenuTbl && ZBaseInstalled then
+        spawnMenuTbl = ZBaseSpawnMenuNPCList[spawnMenuCls]
     end
 
-    -- Create NPC
-    local NPC = ents.Create( isZBaseNPC and SpawnMenuClass or SpawnMenuTable.Class )
+    -- No such npc
+    if !spawnMenuTbl then
+        error("No such npc found in spawn menu: "..spawnMenuCls)
+    end
 
-    -- No such NPC
-    if not IsValid(NPC) then
-        ErrorNoHaltWithStack("No such NPC found: '", SpawnMenuTable.Class, "'\n")
-        return
+    -- Create npc
+    local npc = ents.Create( spawnMenuTbl.SpawnMenuZBaseClass or spawnMenuTbl.Class )
+
+    -- No such npc
+    if !IsValid(npc) then
+        error("No such entity could be created: "..spawnMenuCls)
     end
 
     -- Position
     if isvector(pos) then
-        NPC:SetPos(pos)
+        npc:SetPos(pos)
     end
 
     -- Default weapons if none if provided
-    wep = wep or (SpawnMenuTable.Weapons and table.Random(SpawnMenuTable.Weapons))
+    wep = wep or (spawnMenuTbl.Weapons && table.Random(spawnMenuTbl.Weapons))
     if isstring(wep) then
-        NPC:Give( wep )
+        npc:Give( wep )
     end
 
     -- Key values
-    if SpawnMenuTable.KeyValues then
-        for key, value in pairs(SpawnMenuTable.KeyValues) do
-            NPC:SetKeyValue(key, value)
+    if spawnMenuTbl.KeyValues then
+        for key, value in pairs(spawnMenuTbl.KeyValues) do
+            npc:SetKeyValue(key, value)
         end
     end
 
     -- Set stuff
-    if SpawnMenuTable.Model then NPC:SetModel(SpawnMenuTable.Model) end
-    if SpawnMenuTable.Skin then NPC:SetSkin(SpawnMenuTable.Skin) end
-    if SpawnMenuTable.Health then NPC:SetMaxHealth(SpawnMenuTable.Health) NPC:SetHealth(SpawnMenuTable.Health) end
-    if SpawnMenuTable.Material then NPC:SetMaterial(SpawnMenuTable.Material) end
-    if SpawnMenuTable.SpawnFlags then NPC:SetKeyValue("spawnflags", SpawnMenuTable.SpawnFlags) end
+    if spawnMenuTbl.Model then npc:SetModel(spawnMenuTbl.Model) end
+    if spawnMenuTbl.Skin then npc:SetSkin(spawnMenuTbl.Skin) end
+    if spawnMenuTbl.Health then 
+        npc:SetMaxHealth(spawnMenuTbl.Health) 
+        npc:SetHealth(spawnMenuTbl.Health) 
+    end
+    if spawnMenuTbl.Material then npc:SetMaterial(spawnMenuTbl.Material) end
+    if spawnMenuTbl.SubMaterials then
+        for k, v in pairs(spawnMenuTbl.SubMaterials) do
+            npc:SetSubMaterial(k, v)
+        end
+    end
+    if spawnMenuTbl.SpawnFlags then npc:SetKeyValue("spawnflags", spawnMenuTbl.SpawnFlags) end
 
     if isfunction(beforeSpawnFunc) then
-        beforeSpawnFunc( NPC )
+        beforeSpawnFunc( npc )
     end
 
     -- Spawn and Activate
-    NPC:Spawn()
-    NPC:Activate()
+    npc:Spawn()
+    npc:Activate()
 
-    return NPC
+    return npc
 end
 
 
@@ -100,29 +91,9 @@ function conv.getEntInfo( cls, func )
 
     conv.callNextTick(function( Ent )
         func(Ent)
-        Ent:Remove()
+        SafeRemoveEntity( Ent )
     end, ent)
 end
-
-
---[[
-==================================================================================================
-                    Spawnflags
-==================================================================================================
---]]
-
-function ENT:CONV_SetSpawnFlags(...)
-    self:SetKeyValue("spawnflags", bit.bor(...))
-end
-
-function ENT:CONV_AddSpawnFlags(...)
-    self:SetKeyValue("spawnflags", bit.bor(self:GetSpawnFlags(), ...))
-end
-
-function ENT:CONV_RemoveSpawnFlags(...)
-    self:SetKeyValue("spawnflags", bit.band(self:GetSpawnFlags(), bit.bnot(...)))
-end
-
 
 --[[
 ==================================================================================================
@@ -130,15 +101,15 @@ end
 ==================================================================================================
 --]]
 
--- Used to call a function on a client from the server -- 
+-- Used to call a function on a client from the server --
 function conv.callOnClient( ply, ent, functionName, ... )
 	if not isstring(functionName) then return end
 
-	local data = {...} or {}
-    
+	local data = {...} || {}
+
     data = conv.tableToString( data )
-    ent = IsValid(ent) and tostring( ent:EntIndex() ) or ent or ""
-    
+    ent = IsValid(ent) && tostring( ent:EntIndex() ) || ent || ""
+
     net.Start( "CONV_CallOnClient" )
     net.WriteString( ent )
     net.WriteString( functionName )
@@ -158,7 +129,7 @@ end
 ==================================================================================================
 --]]
 
--- Creates the lua_run entity to be used with related functions -- 
+-- Creates the lua_run entity to be used with related functions --
 function conv.createLuaRun()
 	CONV_LUA_RUN_ENT = ents.Create( "lua_run" )
 	if IsValid(CONV_LUA_RUN_ENT) then
@@ -167,27 +138,27 @@ function conv.createLuaRun()
 	end
 end
 
--- Creates a hook that runs whenever the set entity fires the specified output. -- 
+-- Creates a hook that runs whenever the set entity fires the specified output. --
 function ENT:CONV_CreateOutputHook(entOutput, eventName, delay, repetitions)
-	if not IsValid(CONV_LUA_RUN_ENT) then conv.createLuaRun() end
-	
-	delay = delay or 0
-	repetitions = repetitions or -1
-	
+	if !IsValid(CONV_LUA_RUN_ENT) then conv.createLuaRun() end
+
+	delay = delay || 0
+	repetitions = repetitions || -1
+
 	self:Fire( "AddOutput", entOutput .. " CONV_LUA_RUN_ENT:RunPassedCode:hook.Run( '" .. eventName .. "' ):" .. delay .. ":" .. repetitions .. "" )
 end
 
--- Creates a function that runs whenever the set entity fires the specified output. -- 
+-- Creates a function that runs whenever the set entity fires the specified output. --
 function ENT:CONV_CreateOutputFunction(entOutput, func, delay, repetitions)
-	if not self or not IsValid(self) then return end
-	if not IsValid(CONV_LUA_RUN_ENT) then conv.createLuaRun() end
-	
-	delay = delay or 0
-	repetitions = repetitions or -1
+	if !self || !IsValid(self) then return end
+	if !IsValid(CONV_LUA_RUN_ENT) then conv.createLuaRun() end
+
+	delay = delay || 0
+	repetitions = repetitions || -1
 
 	local hookID = entOutput .. self:GetClass() .. self:EntIndex()
 
-	hook.Add(hookID, self, function() 
+	hook.Add(hookID, self, function()
 
 		local activator, caller = ACTIVATOR, CALLER
 		func(self, activator, caller)
@@ -249,11 +220,11 @@ end
 
 -- Creates env_skypaint and sets the skybox texture to "painted" if not set currently
 function conv.createSkyPaint()
-    if CONV_SKYPAINT then return end
+    if IsValid( CONV_SKYPAINT ) then return end
 
     CONV_SKYPAINT = ents.Create( "env_skypaint" )
 
-    if CONV_SKYPAINT then
+    if IsValid( CONV_SKYPAINT ) then
         CONV_SKYPAINT:Spawn()
         CONV_SKYPAINT:Activate()
 
@@ -283,11 +254,11 @@ function conv.createSkyPaint()
 
         RunConsoleCommand( "sv_skyname", "painted" )
     end
-end 
+end
 
 -- Removes user created env_skypaint and restores the original skybox texture. Does nothing to the map spawned env_skypaint
 function conv.removeSkyPaint()
-    if not CONV_SKYPAINT or CONV_DEFAULT_SKYBOX == "painted" then return end
+    if !IsValid( CONV_SKYPAINT ) || CONV_DEFAULT_SKYBOX == "painted" then return end
     CONV_SKYPAINT:Remove()
     CONV_SKYPAINT = nil
     RunConsoleCommand( "sv_skyname", CONV_DEFAULT_SKYBOX )
@@ -295,10 +266,10 @@ end
 
 -- Allows to edit main atributes of the env_skypaint
 function conv.editSkyPaintMain( TopColor, BottomColor, FadeBias, HDRScale )
-    if not CONV_SKYPAINT then return end
-    
-    local TopColor = IsColor(TopColor) and TopColor:ToVector() or TopColor
-    local BottomColor = IsColor(BottomColor) and BottomColor:ToVector() or BottomColor
+    if !IsValid( CONV_SKYPAINT ) then return end
+
+    local TopColor = IsColor(TopColor) && TopColor:ToVector() || TopColor
+    local BottomColor = IsColor(BottomColor) && BottomColor:ToVector() || BottomColor
 
     CONV_SKYPAINT:SetTopColor( TopColor or CONV_SKYPAINT.TopColor )
 	CONV_SKYPAINT:SetBottomColor( BottomColor or CONV_SKYPAINT.BottomColor )
@@ -330,7 +301,7 @@ end
 
 -- Allows to edit sun atributes of the env_skypaint
 function conv.editSkyPaintSun( SunSize, SunColor )
-    if not CONV_SKYPAINT then return end
+    if !IsValid( CONV_SKYPAINT ) then return end
 
     local SunColor = IsColor(SunColor) and SunColor:ToVector() or SunColor
 
@@ -340,10 +311,10 @@ end
 
 -- Allows you to edit env_sun
 function conv.editEnvSun( SunSize, OverlaySize, SunColor, OverlayColor )
-    if not CONV_ENV_SUN then return end
+    if !IsValid( CONV_ENV_SUN ) then return end
 
-    local SunColor = isvector(SunColor) and SunColor:ToColor() or SunColor
-    local OverlayColor = isvector(OverlayColor) and OverlayColor:ToColor() or OverlayColor
+    local SunColor = isvector(SunColor) && SunColor:ToColor() || isstring( SunColor ) && string.ToColor( SunColor ) || SunColor
+    local OverlayColor = isvector(OverlayColor) && OverlayColor:ToColor() || isstring( OverlayColor ) && string.ToColor( OverlayColor ) || OverlayColor
 
     CONV_ENV_SUN:SetKeyValue( "size", SunSize or CONV_ENV_SUN.SunSize )
 	CONV_ENV_SUN:SetKeyValue( "overlaysize", OverlaySize or CONV_ENV_SUN.OverlaySize )
@@ -362,17 +333,7 @@ end
 --]]
 
 function conv.dmgInfoGetDamager(dmginfo)
-    local att = IsValid(dmginfo:GetAttacker()) and dmginfo:GetAttacker()
-    local inf = IsValid(dmginfo:GetInflictor()) and dmginfo:GetInflictor()
-    local wep = IsValid(dmginfo:GetWeapon()) and dmginfo:GetWeapon()
-    return att or inf or wep
-end 
-
-
---[[
-==================================================================================================
                     PLAYER UTILITIES
-==================================================================================================
 --]]
 
 function PLAYER:CONV_SetPlayerClass(class)
@@ -382,3 +343,40 @@ end
 function PLAYER:CONV_GetPlayerClass()
     return self:GetInternalVariable("m_nControlClass")
 end
+    local att = IsValid(dmginfo:GetAttacker()) && dmginfo:GetAttacker()
+    local inf = IsValid(dmginfo:GetInflictor()) && dmginfo:GetInflictor()
+    local wep = IsValid(dmginfo:GetWeapon()) && dmginfo:GetWeapon()
+    return att || inf || wep
+end
+
+-- Returns an CTakeDamageInfo object with some basic values set
+function conv.damageBasic(damage, dmgtype, pos, attacker)
+    local dmginfo = DamageInfo()
+    dmginfo:SetAttacker(attacker)
+    dmginfo:SetInflictor(attacker)
+    dmginfo:SetDamage(damage)
+    dmginfo:SetDamageType(dmgtype)
+    dmginfo:SetDamagePosition(pos)
+    return dmginfo
+end
+
+--[[
+                    COMMANDS
+--]]
+
+-- Dumps the total size of all workshop addons in GB to the console
+concommand.Add("conv_dump_sv_workshop_gb", function( ply )
+    if !ply:IsAdmin() then return end
+    
+    local bytes = 0
+    
+    for _, addon in ipairs(engine.GetAddons()) do
+        if addon.mounted then
+            bytes = bytes + addon.size
+        end
+    end
+    
+    -- Convert to GB
+    local gb = bytes / 1024 / 1024 / 1024
+    print( "Total Workshop Addons Size: " .. string.format("%.2f", gb) .. " GB" )
+end)

@@ -23,7 +23,7 @@ function table.InsertEntity( tbl, ent )
     ent:CallOnRemove("RemoveFrom_"..tostring(tbl), function()
 
         table.RemoveByValue(tbl, ent)
-        
+
     end)
 
 end
@@ -70,8 +70,7 @@ function game.GetCurrentAmmoMax(id)
 
     if cvarMax <= 0 then
         return game.GetAmmoMax(id)
-    else
-        return cvarMax
     end
 
+    return cvarMax
 end

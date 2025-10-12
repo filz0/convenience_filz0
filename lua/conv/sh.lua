@@ -1,4 +1,4 @@
-local Developer = GetConVar("developer")
+local developer = GetConVar("developer")
 local ENT = FindMetaTable("Entity")
 local NPC = FindMetaTable("NPC")
 
@@ -18,7 +18,7 @@ function conv.callNextTick( func, ... )
         func(unpack(argtbl))
     end)
 
-end 
+end
 
 
 -- Do something after a certain amount of ticks/frames
@@ -31,7 +31,7 @@ function conv.callAfterTicks( ticknum, func, ... )
         else
             conv.callAfterTicks( ticknum-1, func, ... )
         end
-        
+
 
     end, ... )
 
@@ -49,6 +49,17 @@ function conv.tickForEach( tbl, func )
     for k, v in ipairs(tbl) do
         conv.callAfterTicks( k, func, k, v )
     end
+end
+
+
+-- Similiar to CONV_TempVar
+-- Set a global to true for some duration before removing it
+-- Calling it again will cause the lifetime of the global to reset
+function conv.tempCond( global_name, lifetime )
+    _G[global_name] = true
+    timer.Create("conv.tempCond_"..global_name, lifetime, 1, function()
+        _G[global_name] = nil
+    end)
 end
 
 
@@ -155,7 +166,7 @@ function conv.addFile( File, directory )
 
 	if isServerFile and SERVER then
 		include( directory .. File )
-        return    
+        return
     end
 
     if isClientFile then
@@ -177,7 +188,7 @@ end
 
 function conv.includeDir( directory, skipSubstrs )
     skipSubstrs = skipSubstrs or {}
-    
+
 	directory = directory .. "/"
 
 	local files, directories = file.Find( directory .. "*", "LUA" )
@@ -186,14 +197,14 @@ function conv.includeDir( directory, skipSubstrs )
 	for _, v in ipairs( files ) do
         for _, skipSubstr in ipairs(skipSubstrs) do
             local res = string.find(v, skipSubstr)
-            if res then 
+            if res then
                 bSkip = true
-                break 
+                break
             end
         end
-        if bSkip then 
+        if bSkip then
             bSkip = false
-            continue 
+            continue
         end
 
 		if string.EndsWith( v, ".lua" ) then
@@ -204,14 +215,14 @@ function conv.includeDir( directory, skipSubstrs )
 	for _, v in ipairs( directories ) do
         for _, skipSubstr in ipairs(skipSubstrs) do
             local res = string.find(v, skipSubstr)
-            if res then 
+            if res then
                 bSkip = true
-                break 
+                break
             end
         end
-        if bSkip then 
+        if bSkip then
             bSkip = false
-            continue 
+            continue
         end
 		conv.includeDir( directory .. v, skipSubstrs )
 	end
@@ -227,7 +238,7 @@ end
 -- Prints but only if "developer" is more than 1
 -- Also prints to all SuperAdmins on dedicated servers
 function conv.devPrint(...)
-    if Developer:GetInt() < 1 and not (SERVER and game.IsDedicated()) then return end
+    if developer:GetInt() < 1 && !(SERVER && game.IsDedicated()) then return end
 
     if SERVER and game.IsDedicated() then
         for _, superadmin in player.Iterator() do
@@ -238,7 +249,7 @@ function conv.devPrint(...)
                 for _, v in ipairs(table.Pack(...)) do
                     if IsColor(v) then
                         clColStr = "Color("..v.r..", "..v.g..", "..v.b.."), "
-                        continue 
+                        continue
                     end
 
                     clprintStr = clprintStr..tostring(v)
@@ -276,7 +287,7 @@ end
 --     return {}
 -- end)
 function conv.overlay( funcname, argsFunc )
-    if not Developer:GetBool() then return end
+    if !developer:GetBool() then return end
     local args = argsFunc()
     debugoverlay[funcname](unpack(args))
 end
@@ -376,24 +387,12 @@ end
 
 --[[
 ==================================================================================================
-                    NPC SPAWNING
-==================================================================================================
---]]
-
-
-function conv.getSpawnMenuNPCs()
-    return conv._SpawnMenuNPCs
-end
-
-
---[[
-==================================================================================================
                     COMMUNICATION / INFO / TEXT / HINT / HELP UTILITIES
 ==================================================================================================
 --]]
 
 
--- "strID"      -   Unique identifier for this text, 
+-- "strID"      -   Unique identifier for this text,
 --                  if another text with this ID is created, the old one will simply be updated
 --                  with the new attributes. ID:s are not synced between client and server.
 -- "pos"        -   The position to display the text at
@@ -423,9 +422,9 @@ function conv.display3DText( strID, pos, fDuration, strText, col, fSize )
         text:resetRemoveTimer(fDuration)
     else
         -- Create new text
-        text = (SERVER and ents.Create("conv_text")) or (CLIENT and ents.CreateClientside("conv_text"))
-        
-        if not IsValid(text) then
+        text = (SERVER && ents.Create("conv_text")) or (CLIENT && ents.CreateClientside("conv_text"))
+
+        if !IsValid(text) then
             error("Failed to create text entity!")
         end
 
@@ -467,21 +466,20 @@ function conv.sendGModHint( ply, strMsg, iType, fDuration )
     end
 end
 
-
 --[[
 ==================================================================================================
-                    OTHER CONVENIENT
+                    MATH
 ==================================================================================================
 --]]
-
-function conv.thisEntOrWorld( ent )
-    if not IsValid(ent) then return game.GetWorld() end
-    return ent
-end
 
 -- Runs a check based on a percentage chance
 function conv.pctChance(percent)
     return math.random() * 100 <= percent
+end
+
+-- Helper to check if a number is a float (has decimals)
+function conv.isFloat(n)
+    return n % 1 != 0
 end
 
 -- Checks if pos1 is at or closer distance to pos2
@@ -520,25 +518,6 @@ function conv.getDistVector(pos1, pos2, root)
 	return dist
 end
 
--- Check duration of the provided sound file
-function conv.getSoundDuration(snd)
-    if not snd then
-        error("No sound provided!")
-    end
-
-    local sounddur = SoundDuration( snd )
-	if sounddur then
-		sounddur = math.Round( sounddur * 1000 ) / 1000	
-	end
-
-    return sounddur
-end
-
--- Helper to check if a number is a float (has decimals)
-function conv.isFloat(n)
-    return n % 1 != 0
-end
-
 --[[
 ==================================================================================================
                     ENTITY TIMER / TICK FUNCTIONS
@@ -546,13 +525,19 @@ end
 --]]
 
 
--- Call a method for this ent next tick
+-- Call a method or function for this ent next tick
+-- If the ent is invalid next tick, this does nothing
+-- Same goes if you passed a string method name and the ent does not have it
 function ENT:CONV_CallNextTick( methodnameorfunc, ... )
     local function func( me, ... )
-        if not IsValid(me) then return end
-        
+        if !IsValid(me) then return end
+
         if isstring(methodnameorfunc) then
-            me[methodnameorfunc](me, ...)
+            
+            if isfunction(me[methodnameorfunc]) then
+                me[methodnameorfunc](me, ...)
+            end
+
         elseif isfunction(methodnameorfunc) then
             methodnameorfunc(...)
         else
@@ -626,7 +611,7 @@ end
 function ENT:CONV_TimerCreate(name, dur, reps, func, ...)
     local timerName = name..self:EntIndex()
     local args = table.Pack(...)
-    
+
     timer.Create(timerName, dur, reps, function()
         if not IsValid(self) then
             timer.Remove(timerName)
@@ -651,6 +636,18 @@ end
                     ENTITY UTILITIES
 ==================================================================================================
 --]]
+
+-- Try get a human-readable name of an entity
+function ENT:CONV_GetName()
+    -- Player name
+    if self:IsPlayer() then
+        return self:GetName()
+    end
+
+    return string.NiceName(
+                string.TrimLeft(self.PrintName || (SERVER && hook.Run("GetDeathNoticeEntityName", self)) || self:GetClass() 
+                    , "#"))
+end
 
 
 -- Stores the entity in a table, and removes it from said table when the entity is no longer valid
@@ -767,8 +764,8 @@ end
 -- Checks if the provided sequence is valid
 -- 'seq' - The sequence ID or name, can be obtained with ENT:LookupSequence()
 -- Returns true if the sequence is valid, false otherwise
-function ENT:CONV_IsValidSequence( seq )    
-    if not isnumber(seq) then
+function ENT:CONV_IsValidSequence( seq )
+    if !isnumber(seq) then
         seq = self:LookupSequence( seq )
     end
 
@@ -795,9 +792,9 @@ function NPC:CONV_PlaySequence( seq, speed, cycle, loops, animThink, callback )
     local cycle = cycle or 0
     local loops = loops or 0
 
-    self:SetNPCState( NPC_STATE_SCRIPT )   
-    self:SetSchedule( SCHED_SCENE_GENERIC ) 
-    self:ResetSequenceInfo()  
+    self:SetNPCState( NPC_STATE_SCRIPT )
+    self:SetSchedule( SCHED_SCENE_GENERIC )
+    self:ResetSequenceInfo()
     self:SetSequence( seq )
     self:SetPlaybackRate( speed )
     self:SetCycle( cycle )
@@ -809,12 +806,12 @@ function NPC:CONV_PlaySequence( seq, speed, cycle, loops, animThink, callback )
     local lastTick = CurTime()
 
     self:CONV_AddHook( "Think", function()
-        
-        if not IsValid(self) then return end
+
+        if !IsValid(self) then return end
 
         self:SetPlaybackRate( speed )
-        
-        local seqError = self:GetSequence() != seqID     
+
+        local seqError = self:GetSequence() != seqID
 
         if isfunction(animThink) then
 
@@ -835,18 +832,18 @@ function NPC:CONV_PlaySequence( seq, speed, cycle, loops, animThink, callback )
             if ( loops > 0 or loops == -1 ) and not seqError then
 
                 self:ResetSequenceInfo()
-                self:SetCycle( cycle )      
+                self:SetCycle( cycle )
 
                 if isfunction(callback) then callback( loops ) end
 
             elseif ( not loops or loops == 0 or seqError ) then
 
-                self:CONV_StopSequence() 
+                self:CONV_StopSequence()
 
                 if isfunction(callback) then callback( loops, seqError ) end
 
             end
-                  
+
         end
 
     end, name )
@@ -859,8 +856,8 @@ function NPC:CONV_IsPlayingSequence()
 end
 
 -- Stops the currently playing sequence on the NPC
-function NPC:CONV_StopSequence() 
-    self:SetNPCState( NPC_STATE_IDLE )   
+function NPC:CONV_StopSequence()
+    self:SetNPCState( NPC_STATE_IDLE )
     self:ResetSequenceInfo()
     self:CONV_RemoveHook( "Think", "NPCAnimPlayer" .. self:EntIndex() )
 end
@@ -892,7 +889,7 @@ function NPC:CONV_ListConditions()
             table.insert( tab, text )
 
 		end
-		
+
 	end
 
     return tab
@@ -912,22 +909,22 @@ end
 -- 'HITGROUP_GEAR'	    10	Gear. Supposed to be belt area.
 --                          This hitgroup is not present on default player models.
 --                          Alerts NPC, but doesn't do damage or bleed (1/100th damage)
-function NPC:CONV_GetHitGroupBone( hg )	
+function NPC:CONV_GetHitGroupBone( hg )
 	local numHitBoxSets = self:GetHitboxSetCount()
 	if numHitBoxSets then
-		for hboxset = 0, numHitBoxSets - 1 do	
-			local numHitBoxes = self:GetHitBoxCount( hboxset )  
-			for hitbox = 0, numHitBoxes - 1 do	
-				if self:GetHitBoxHitGroup( hitbox, hboxset ) == hg then	
-					local bone = self:GetHitBoxBone( hitbox, hboxset )			
-					if ( not bone or bone < 0 ) then return false end			
+		for hboxset = 0, numHitBoxSets - 1 do
+			local numHitBoxes = self:GetHitBoxCount( hboxset )
+			for hitbox = 0, numHitBoxes - 1 do
+				if self:GetHitBoxHitGroup( hitbox, hboxset ) == hg then
+					local bone = self:GetHitBoxBone( hitbox, hboxset )
+					if ( !bone || bone < 0 ) then return false end
 					local pos, ang = self:GetBonePosition( bone )
-					return pos, ang, bone			
-				end			
-			end		
-		end	
+					return pos, ang, bone
+				end
+			end
+		end
 	end
-	return nil, -1	
+	return nil, -1
 end
 
 
@@ -958,7 +955,7 @@ function conv.tableToString( tbl )
 	local str = "{"
 
 	for k, v in pairs(tbl) do
-        
+
 		if isstring(v) then
 
 			str = str .. string.format( "[%q] = %q,", k, v )
@@ -984,7 +981,7 @@ function conv.tableToString( tbl )
 
 			str = str .. string.format( "[%q] = Angle( %f, %f, %f ),", k, v.p, v.y, v.r )
 
-		elseif IsEntity(v) then
+		elseif isentity(v) then
 
 			str = str .. string.format( "[%q] = Entity( %d ),", k, v:EntIndex() )
 
@@ -1005,7 +1002,7 @@ function conv.tableToString( tbl )
 	end
 
 	str = str .. "}"
-	
+
 	return str
 end
 
@@ -1013,9 +1010,37 @@ end
 function conv.stringToTable( str )
     local func = CompileString( "return " .. str, "StringToTable", false )
     local tbl = func()
-    
+
     tbl = conv.tablePairsToIPairs( tbl )
 
     return tbl
 end
 
+--[[
+==================================================================================================
+                    OTHER CONVENIENT
+==================================================================================================
+--]]
+
+function conv.getSpawnMenuNPCs()
+    return conv._SpawnMenuNPCs
+end
+
+function conv.thisEntOrWorld( ent )
+    if !IsValid(ent) then return game.GetWorld() end
+    return ent
+end
+
+-- Check duration of the provided sound file
+function conv.getSoundDuration(snd)
+    if !snd then
+        error("No sound provided!")
+    end
+
+    local sounddur = SoundDuration( snd )
+	if sounddur then
+		sounddur = math.Round( sounddur * 1000 ) / 1000
+	end
+
+    return sounddur
+end
