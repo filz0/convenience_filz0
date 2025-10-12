@@ -376,5 +376,9 @@ end
 --]]
 
 function PLAYER:CONV_SetPlayerClass(class)
-    self:SetSaveValue("m_nControlClass", class or 0)
+    self:SetSaveValue("m_nControlClass", class or 1)
+end
+
+function PLAYER:CONV_GetPlayerClass()
+    return self:GetInternalVariable("m_nControlClass")
 end

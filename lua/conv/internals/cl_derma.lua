@@ -32,7 +32,7 @@ local color_no = Color( 0, 0, 0, 0 )
 --]]
 
 -- Creates a derma menu with a lot of cool features
-function conv.dermaMenu( w, h, animDelta, blur, tittle, font, tColor, bgColor, hColor, tickFunc, crossFunc, categories )
+function conv.dermaMenu( w, h, animDelta, blur, tittle, font, tColor, bgColor, hColor, tickFunc, crossFunc )
     bgColor = bgColor or color_white
     hColor = hColor or Color( color_gmod.r, color_gmod.g, color_gmod.b, 255 )
     font = font or "DermaDefaultBold"

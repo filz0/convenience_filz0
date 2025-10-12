@@ -735,6 +735,23 @@ function ENT:CONV_RemoveHook( Type, name )
     hook.Remove(Type, id)
 end
 
+-- Translates a sequence name or number to an activity
+-- 'anim' - The sequence name or number, can be obtained with ENT:LookupSequence()
+function ENT:CONV_TranslateSequence(anim)
+	if isstring( anim ) then
+		local result = self:GetSequenceActivity( self:LookupSequence( anim ) )	
+		if result == nil || result == -1 then	
+			return false			
+		else		
+			return result			
+		end		
+	elseif isnumber( anim ) then 	
+		return anim		
+	else	
+		return false		
+	end	
+end
+
 -- Returns the number of frames in the given sequence
 -- 'seqID' - The sequence ID, can be obtained with ENT:LookupSequence()
 -- 'animID' - The animation ID, can be obtained with ENT:GetSequenceInfo( seqID )
@@ -744,7 +761,7 @@ function ENT:CONV_SequenceGetFrames( seqID, animID )
     local seqInfo = self:GetSequenceInfo( seqID )
     if not seqInfo then return end
 	local animID = seqInfo.anims[ animID or 1 ]
-	return seqInfo.numframes or -1
+	return seqInfo.numframes or animID or -1
 end
 
 -- Checks if the provided sequence is valid
@@ -974,6 +991,10 @@ function conv.tableToString( tbl )
         elseif istable(v) then
 
             str = str .. string.format( "[%q] = %s,", k, conv.tableToString(v) )
+
+        elseif v.GetTexture then -- Material
+
+            str = str .. string.format( "[%q] = Material( %q ),", k, v:GetName() )
 
 		else
 

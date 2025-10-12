@@ -276,11 +276,14 @@ local function Render(renderHook)
 				else
 					mat:SetTexture("$basetexture", texture)
 				end
+
+				mat:SetVector("$color", Vector(color.r / 255, color.g / 255, color.b / 255))
 				
 				if matDraw then matDraw(mat) end
 
 				cam.Start2D()
 					surface.SetDrawColor(255, 255, 0, 255)
+
 					surface.SetMaterial(mat)
 					surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
 				cam.End2D()

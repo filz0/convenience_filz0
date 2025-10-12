@@ -12,8 +12,8 @@ local IsValid = IsValid
 
 module( "conv_outline_fast", package.seeall )
 
-local MODE_NOTVISIBLE = 0
-local MODE_VISIBLE = 1
+local MODE_NOTVISIBLE 		= 0
+local MODE_VISIBLE 			= 1
 
 local List, ListSize		= {}, 0
 local RenderEnt				= NULL
@@ -36,6 +36,8 @@ local ENTS, COLOR, MODE, CHILDREN	= 1, 2, 3, 4
 local renderManager = {
 
 	a = {
+		["PrePlayerDraw"] = true,
+		["PostPlayerDraw"] = true,
 		["PreDrawViewModel"] = true,
 		["PreDrawViewModels"] = true,
 		["PostDrawViewModel"] = true,
@@ -46,6 +48,7 @@ local renderManager = {
 	b = {
 		["gmod_hands"] = true,
 		["viewmodel"] = true,
+		["player"] = true,
 	},
 
 	c = false,
@@ -201,9 +204,8 @@ local function Render(renderHook)
 			local vmDraw = renderManager:IsVMDraw(renderHook)
 			local ents = data[ENTS]
 			local color = data[COLOR]
-			local mode = vmDraw and 2 or data[MODE]
+			local mode = vmDraw and 0 or data[MODE]
 			local children = data[CHILDREN]
-
 			
 			-- Determine our reference value based on the list index
 			render.SetStencilReferenceValue(reference)
@@ -223,7 +225,7 @@ local function Render(renderHook)
 			render.OverrideDepthEnable(true, false)
 
 
-			RenderModels(ents, children)
+			RenderModels(ents, children, renderHook)
 
 
 			-- Undo cheap rendering
@@ -239,7 +241,9 @@ local function Render(renderHook)
 			render.SetColorModulation( color.r / 255, color.g / 255, color.b / 255 )
 			render.MaterialOverride( mode == MODE_NOTVISIBLE and WFOutlineZ or WFOutline )
 
-			RenderModels(ents, children)
+
+			RenderModels(ents, children, renderHook)
+
 
 			render.MaterialOverride( nil )
 
@@ -260,13 +264,21 @@ local function CONVRenderOutlinesFast(renderHook)
 	hook.Run( "CONVSetupOutlinesFast", renderHook )
 
 	if ( ListSize == 0 ) then return end
-	print("Rendering outlines fast for: " .. renderHook)
+
 	Render(renderHook)
 	
 	List, ListSize = {}, 0	
 end
 
 
+
+hook.Add("PrePlayerDraw", "CONVRenderOutlinesFast", function()
+    CONVRenderOutlinesFast("PrePlayerDraw")	
+end)
+
+hook.Add("PostPlayerDraw", "CONVRenderOutlinesFast", function()
+    CONVRenderOutlinesFast("PostPlayerDraw")	
+end)
 
 hook.Add("PreDrawViewModels", "CONVRenderOutlinesFast", function()
     CONVRenderOutlinesFast("PreDrawViewModels")	
