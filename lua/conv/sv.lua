@@ -3,31 +3,6 @@ local PLAYER = FindMetaTable("Player")
 
 --[[
 ==================================================================================================
-                    ENTITY INFO
-==================================================================================================
---]]
-
--- Spawns an entity for a short duration allowing you to obtain info about it
-function conv.getEntInfo( cls, func )
-    local ent = ents.Create(cls)
-    if not IsValid(ent) then
-        ErrorNoHaltWithStack("No such ENT found: '", cls, "'\n")
-        return
-    end
-
-    ent:CONV_AddHook( "EntityEmitSound", function() return false end )
-
-    ent:Spawn()
-    ent:Activate()
-
-    conv.callNextTick(function( Ent )
-        func(Ent)
-        SafeRemoveEntity( Ent )
-    end, ent)
-end
-
---[[
-==================================================================================================
                     PLAYER UTILITIES
 ==================================================================================================
 --]]
@@ -43,7 +18,7 @@ end
 
 --[[
 ==================================================================================================
-                    NPC UTILITIES
+                    NPC SPAWNING
 ==================================================================================================
 --]]
 
@@ -114,9 +89,24 @@ function conv.createSpawnMenuNPC( spawnMenuCls, pos, wep, beforeSpawnFunc )
     return npc
 end
 
--- Checks if the NPC has a certain capability
-function NPC:CONV_HasCapability( cap )
-    return bit.band(self:CapabilitiesGet(), cap) == cap
+
+-- Spawns an entity for a short duration allowing you to obtain info about it
+function conv.getEntInfo( cls, func )
+    local ent = ents.Create(cls)
+    if not IsValid(ent) then
+        ErrorNoHaltWithStack("No such ENT found: '", cls, "'\n")
+        return
+    end
+
+    ent:CONV_AddHook( "EntityEmitSound", function() return false end )
+
+    ent:Spawn()
+    ent:Activate()
+
+    conv.callNextTick(function( Ent )
+        func(Ent)
+        SafeRemoveEntity( Ent )
+    end, ent)
 end
 
 --[[
