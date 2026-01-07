@@ -474,13 +474,15 @@ hook.Add("PostDrawEffects", "CONVRenderOutlines", function()
 end)
 
 -- Helper function to apply outline fast effect using conv.callOnClient
-function conv.addOutline( hookName, ents, color, mode, render_type, outline_thickness, include_children )
+function conv.addOutline( hookName, renderHook, ents, color, mode, render_type, outline_thickness, include_children )
 
-	if not ents and not color and not mode and not render_type and not outline_thickness and not include_children then hook.Remove( "CONVSetupOutlines", hookName ) return end
+	if not ents then hook.Remove( "CONVSetupOutlines", hookName ) return end
 
-	hook.Add( "CONVSetupOutlines", hookName, function()
+	hook.Add( "CONVSetupOutlines", hookName, function(renderHookCalled)
 
-		conv_outline.Add( ents, color, mode, render_type, outline_thickness, include_children )
+		if renderHookCalled == renderHook then
+			conv_outline.Add( ents, color, mode, render_type, outline_thickness, include_children )
+		end
 
 	end )
 

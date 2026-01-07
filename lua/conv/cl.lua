@@ -19,7 +19,8 @@ function CONV_INTERNAL_COCTranslate( ent, funcN, data )
 	
 	elseif istable(ent) then
 		
-		ent[ funcN ]( unpack( data ) )
+		--ent[ funcN ]( unpack( data ) )
+		ent[ funcN ]( "", unpack( data ) )
 		
 	else
 		

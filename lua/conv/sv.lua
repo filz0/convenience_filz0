@@ -115,15 +115,16 @@ end
 ==================================================================================================
 --]]
 
--- Used to call a function on a client from the server --
+-- Used to call a function on a client from the server -- 
 function conv.callOnClient( ply, ent, functionName, ... )
 	if not isstring(functionName) then return end
 
-	local data = {...} || {}
-
+	local data = {...} or {}
+    
     data = conv.tableToString( data )
-    ent = IsValid(ent) && tostring( ent:EntIndex() ) || ent || ""
 
+    ent = IsValid(ent) and tostring( ent:EntIndex() ) or ent or ""
+    
     net.Start( "CONV_CallOnClient" )
     net.WriteString( ent )
     net.WriteString( functionName )

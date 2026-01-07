@@ -751,21 +751,26 @@ end
 
 -- Returns the number of frames in the given sequence
 -- 'seqID' - The sequence ID, can be obtained with ENT:LookupSequence()
--- 'animID' - The animation ID, can be obtained with ENT:GetSequenceInfo( seqID )
--- If animID is not provided, it defaults to the first animation in the sequence
+-- 'anim' - The animation index within the sequence
+-- If anim is not provided, it defaults to the first animation in the sequence
 -- Returns -1 if the sequence or animation does not exist
-function ENT:CONV_SequenceGetFrames( seqID, animID )
+function ENT:CONV_SequenceGetFrames( seqID, anim )
+
     local seqInfo = self:GetSequenceInfo( seqID )
     if not seqInfo then return end
-	local animID = seqInfo.anims[ animID or 1 ]
-	return seqInfo.numframes or animID or -1
+
+	local anim = seqInfo.anims[ anim or 1 ]
+    local animInfo = self:GetAnimInfo( anim )
+    if not animInfo then return end
+
+	return animInfo.numframes or 0, animInfo.fps or 0
 end
 
 -- Checks if the provided sequence is valid
 -- 'seq' - The sequence ID or name, can be obtained with ENT:LookupSequence()
 -- Returns true if the sequence is valid, false otherwise
-function ENT:CONV_IsValidSequence( seq )
-    if !isnumber(seq) then
+function ENT:CONV_IsValidSequence( seq )    
+    if not isnumber(seq) then
         seq = self:LookupSequence( seq )
     end
 
@@ -792,9 +797,9 @@ function NPC:CONV_PlaySequence( seq, speed, cycle, loops, animThink, callback )
     local cycle = cycle or 0
     local loops = loops or 0
 
-    self:SetNPCState( NPC_STATE_SCRIPT )
-    self:SetSchedule( SCHED_SCENE_GENERIC )
-    self:ResetSequenceInfo()
+    self:SetNPCState( NPC_STATE_SCRIPT )   
+    self:SetSchedule( SCHED_SCENE_GENERIC ) 
+    self:ResetSequenceInfo()  
     self:SetSequence( seq )
     self:SetPlaybackRate( speed )
     self:SetCycle( cycle )
@@ -806,12 +811,12 @@ function NPC:CONV_PlaySequence( seq, speed, cycle, loops, animThink, callback )
     local lastTick = CurTime()
 
     self:CONV_AddHook( "Think", function()
-
-        if !IsValid(self) then return end
+        
+        if not IsValid(self) then return end
 
         self:SetPlaybackRate( speed )
-
-        local seqError = self:GetSequence() != seqID
+        
+        local seqError = self:GetSequence() != seqID     
 
         if isfunction(animThink) then
 
@@ -832,18 +837,18 @@ function NPC:CONV_PlaySequence( seq, speed, cycle, loops, animThink, callback )
             if ( loops > 0 or loops == -1 ) and not seqError then
 
                 self:ResetSequenceInfo()
-                self:SetCycle( cycle )
+                self:SetCycle( cycle )      
 
                 if isfunction(callback) then callback( loops ) end
 
             elseif ( not loops or loops == 0 or seqError ) then
 
-                self:CONV_StopSequence()
+                self:CONV_StopSequence() 
 
                 if isfunction(callback) then callback( loops, seqError ) end
 
             end
-
+                  
         end
 
     end, name )
@@ -856,10 +861,66 @@ function NPC:CONV_IsPlayingSequence()
 end
 
 -- Stops the currently playing sequence on the NPC
-function NPC:CONV_StopSequence()
-    self:SetNPCState( NPC_STATE_IDLE )
+function NPC:CONV_StopSequence() 
+    self:SetNPCState( NPC_STATE_IDLE )   
     self:ResetSequenceInfo()
     self:CONV_RemoveHook( "Think", "NPCAnimPlayer" .. self:EntIndex() )
+end
+
+-- Resets all bone manipulations on the entity
+function ENT:CONV_ResetBones()	
+	local bonecount = self:GetBoneCount()	
+	for i = 0, bonecount do	
+		self:ManipulateBonePosition( i, Vector( 0, 0, 0 ) )
+		self:ManipulateBoneAngles( i, Angle( 0, 0, 0 ) )
+		self:ManipulateBoneScale( i, Vector( 1, 1, 1 ) )
+		self:ManipulateBoneJiggle( i, 0 )		
+	end
+end
+
+-- Edits multiple bones on the entity based on the provided table
+-- EXAMPLE TABLE:
+--[[
+
+tab = {
+    ["BoneName1"] = {
+        pos = Vector( 10, 0, 0 ),
+        ang = Angle( 0, 45, 0 ),
+        scl = Vector( 1, 1, 1 ),
+        jig = 0
+    },
+    [2] = { -- Bone ID can also be used
+        pos = Vector( 0, 5, 0 ),
+        ang = Angle( 0, 0, 90 ),
+        scl = Vector( 0.5, 0.5, 0.5 ),
+        jig = 1
+    }
+}
+
+]]
+function ENT:CONV_EditBones(tab)	
+	if !tab then return end	
+
+	self:CONV_ResetBones()
+
+	self:CONV_CallNextTick( function()
+
+		if !IsValid(self) then return end
+
+		for bone, params in pairs(tab) do
+		
+			local boneid = isnumber( bone ) && bone || self:LookupBone( bone )	
+			
+			if boneid then	
+				self:ManipulateBonePosition( boneid, params.pos || Vector( 0, 0, 0 ) )
+				self:ManipulateBoneAngles( boneid, params.ang || Angle( 0, 0, 0 ) )
+				self:ManipulateBoneScale( boneid, params.scl || Vector( 1, 1, 1 ) )
+				self:ManipulateBoneJiggle( boneid, params.jig || 0 )					
+			end		
+		end		
+
+	end )
+
 end
 
 --[[

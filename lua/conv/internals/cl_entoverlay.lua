@@ -306,13 +306,15 @@ end)
 
 
 -- Helper function to apply glowshell effect usint conv.callOnClient
-function conv.addOverlay( hookName, ents, color, material, include_children )
+function conv.addOverlay( hookName, renderHook, ents, color, material, include_children )
 
-	if not ents and not color and not material and not include_children then hook.Remove( "CONVSetupOverlays", hookName ) return end
+	if not ents then hook.Remove( "CONVSetupOverlays", hookName ) return end
 
-	hook.Add( "CONVSetupOverlays", hookName, function()
+	hook.Add( "CONVSetupOverlays", hookName, function(renderHookCalled)
 
-		conv_overlay.Add( ents, color, mode, material, nil, include_children )
+		if renderHookCalled == renderHook then
+			conv_overlay.Add( ents, color, mode, material, nil, include_children )
+		end
 
 	end )
 
