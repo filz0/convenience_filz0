@@ -923,6 +923,39 @@ function ENT:CONV_EditBones(tab)
 
 end
 
+
+-- Used to get the pos, ang and bone of the given hitgroup
+-- 'HITGROUP_GENERIC'	0	1:1 damage. Melee weapons and fall damage typically hit this hitgroup. This hitgroup is not present on default player models.
+--                          It is unknown how this is generated in GM:ScalePlayerDamage, but it occurs when shot by NPCs ( npc_combine_s ) for example.
+-- 'HITGROUP_HEAD'	    1	Head
+-- 'HITGROUP_CHEST'	    2	Chest
+-- 'HITGROUP_STOMACH'	3	Stomach
+-- 'HITGROUP_LEFTARM'	4	Left arm
+-- 'HITGROUP_RIGHTARM'	5	Right arm
+-- 'HITGROUP_LEFTLEG'	6	Left leg
+-- 'HITGROUP_RIGHTLEG'	7	Right leg
+-- 'HITGROUP_GEAR'	    10	Gear. Supposed to be belt area.
+--                          This hitgroup is not present on default player models.
+--                          Alerts NPC, but doesn't do damage or bleed (1/100th damage)
+function ENT:CONV_GetHitGroupBone( hg )
+	local numHitBoxSets = self:GetHitboxSetCount()
+	if numHitBoxSets then
+		for hboxset = 0, numHitBoxSets - 1 do
+			local numHitBoxes = self:GetHitBoxCount( hboxset )
+			for hitbox = 0, numHitBoxes - 1 do
+				if self:GetHitBoxHitGroup( hitbox, hboxset ) == hg then
+					local bone = self:GetHitBoxBone( hitbox, hboxset )
+					if ( !bone || bone < 0 ) then return false end
+					local pos, ang = self:GetBonePosition( bone )
+					return pos, ang, bone
+				end
+			end
+		end
+	end
+	return nil, -1
+end
+
+
 --[[
 ==================================================================================================
                     NPC UTILITIES
@@ -955,37 +988,6 @@ function NPC:CONV_ListConditions()
 
     return tab
 
-end
-
--- Used to get the pos, ang and bone of the given hitgroup
--- 'HITGROUP_GENERIC'	0	1:1 damage. Melee weapons and fall damage typically hit this hitgroup. This hitgroup is not present on default player models.
---                          It is unknown how this is generated in GM:ScalePlayerDamage, but it occurs when shot by NPCs ( npc_combine_s ) for example.
--- 'HITGROUP_HEAD'	    1	Head
--- 'HITGROUP_CHEST'	    2	Chest
--- 'HITGROUP_STOMACH'	3	Stomach
--- 'HITGROUP_LEFTARM'	4	Left arm
--- 'HITGROUP_RIGHTARM'	5	Right arm
--- 'HITGROUP_LEFTLEG'	6	Left leg
--- 'HITGROUP_RIGHTLEG'	7	Right leg
--- 'HITGROUP_GEAR'	    10	Gear. Supposed to be belt area.
---                          This hitgroup is not present on default player models.
---                          Alerts NPC, but doesn't do damage or bleed (1/100th damage)
-function NPC:CONV_GetHitGroupBone( hg )
-	local numHitBoxSets = self:GetHitboxSetCount()
-	if numHitBoxSets then
-		for hboxset = 0, numHitBoxSets - 1 do
-			local numHitBoxes = self:GetHitBoxCount( hboxset )
-			for hitbox = 0, numHitBoxes - 1 do
-				if self:GetHitBoxHitGroup( hitbox, hboxset ) == hg then
-					local bone = self:GetHitBoxBone( hitbox, hboxset )
-					if ( !bone || bone < 0 ) then return false end
-					local pos, ang = self:GetBonePosition( bone )
-					return pos, ang, bone
-				end
-			end
-		end
-	end
-	return nil, -1
 end
 
 
