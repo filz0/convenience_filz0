@@ -946,8 +946,7 @@ function ENT:CONV_GetHitGroupBone( hg )
 				if self:GetHitBoxHitGroup( hitbox, hboxset ) == hg then
 					local bone = self:GetHitBoxBone( hitbox, hboxset )
 					if ( !bone || bone < 0 ) then return false end
-					local pos, ang = self:GetBonePosition( bone )
-					return pos, ang, bone
+					return self:GetBonePosition( bone ), bone -- if you can read this, You have a small we we
 				end
 			end
 		end
