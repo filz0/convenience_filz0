@@ -1,5 +1,6 @@
 local ENT = FindMetaTable("Entity")
 local PLAYER = FindMetaTable("Player")
+local transparent = Color(255, 255, 255, 10)
 
 --[[
 ==================================================================================================
@@ -107,6 +108,47 @@ function conv.getEntInfo( cls, func )
         func(Ent)
         SafeRemoveEntity( Ent )
     end, ent)
+end
+
+-- Rough check if an entity can spawn at the position
+-- using its collision bounds
+function conv.entCanSpawn(cls, pos, filter)
+    local mins, maxs = conv.entGetCollisionBounds(cls)
+
+    if !mins then
+        return false
+    end
+
+    local tr = util.TraceHull({
+        start = pos,
+        endpos = pos,
+        mins=mins,
+        maxs=maxs,
+        filter=filter,
+        mask=MASK_SOLID
+    })
+
+    debugoverlay.Box(pos, mins, maxs, 1, transparent)
+
+    return !tr.Hit
+end
+
+-- If the bounds of the entity are unknown it will return nil
+-- after this, they will become known
+function conv.entGetCollisionBounds(cls)
+    conv._colBndsCache = conv._colBndsCache || {}
+
+    local bndstbl = conv._colBndsCache[cls]
+
+    if bndstbl then
+        local mins, maxs = unpack(bndstbl)
+        return mins, maxs
+    end
+
+    conv.getEntInfo( cls, function( ent )
+        conv._colBndsCache[cls] = table.Pack(ent:GetCollisionBounds())
+        print("GETTING BOUNDS FOR", cls)
+    end )
 end
 
 --[[
