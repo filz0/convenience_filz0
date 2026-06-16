@@ -954,6 +954,17 @@ function ENT:CONV_GetHitGroupBone( hg )
 	return nil, -1
 end
 
+-- Makes the entity spawn another entity of class `cls` using a traceline from its center to `pos`.
+function ENT:CONV_CreateEntWithTrace(cls, pos)
+    local ent = ents.Create(cls)
+    local tr = util.TraceLine({
+        start=self:WorldSpaceCenter(),
+        endpos=pos,
+        filter=self
+    })
+    ent:SetPos(tr.HitPos+tr.HitNormal*8)
+    return ent
+end
 
 --[[
 ==================================================================================================
