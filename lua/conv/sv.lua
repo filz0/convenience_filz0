@@ -1,6 +1,7 @@
 local ENT = FindMetaTable("Entity")
 local PLAYER = FindMetaTable("Player")
 local transparent = Color(255, 255, 255, 10)
+local color_green = Color(0, 255, 0)
 
 --[[
 ==================================================================================================
@@ -112,13 +113,14 @@ end
 
 -- Rough check if an entity can spawn at the position
 -- using its collision bounds
-function conv.entCanSpawn(cls, pos, filter)
+-- Assumes the bound's x and y are the same
+function conv.entCanSpawn(cls, pos, filter, mustHaveGround)
     local mins, maxs = conv.entGetCollisionBounds(cls)
-
     if !mins then
         return false
     end
 
+    -- Collision check
     local tr = util.TraceHull({
         start = pos,
         endpos = pos,
@@ -127,8 +129,31 @@ function conv.entCanSpawn(cls, pos, filter)
         filter=filter,
         mask=MASK_SOLID
     })
-
     debugoverlay.Box(pos, mins, maxs, 1, transparent)
+
+    -- Ground check
+    if mustHaveGround then
+        local downAFairBit = Vector(0, 0, -15)
+        for i, vec in ipairs({Vector(maxs.x, maxs.y, 5), 
+                            Vector(-maxs.x, maxs.y, 5), 
+                            Vector(maxs.x, -maxs.y, 5), 
+                            Vector(-maxs.x, -maxs.y, 5)}) do
+            local trstart = pos+vec
+            local trend = trstart + downAFairBit
+            
+            local tr2 = util.TraceLine({
+                start=trstart,
+                endpos=trend,
+                filter=filter
+            })
+            
+            debugoverlay.Line(trstart, trend, 1, color_green)
+            
+            if !tr2.Hit then
+                return false
+            end 
+        end
+    end
 
     return !tr.Hit
 end
@@ -147,7 +172,6 @@ function conv.entGetCollisionBounds(cls)
 
     conv.getEntInfo( cls, function( ent )
         conv._colBndsCache[cls] = table.Pack(ent:GetCollisionBounds())
-        print("GETTING BOUNDS FOR", cls)
     end )
 end
 
