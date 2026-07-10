@@ -991,6 +991,75 @@ function ENT:CONV_CreateEntWithTrace(cls, pos)
     return ent
 end
 
+-- Check if provided entity's mins and maxes can fit inside the provided box, 
+-- and returns a position inside the box where it can fit.
+-- It prioritizes points that are closer to the center of the box
+-- 'boxMins' - Vector - The box's mins.
+-- 'boxMaxs' - Vector - The box's maxs.
+-- 'entMins' - Vector - The entity's mins.
+-- 'entMaxs' - Vector - The entity's maxs.
+-- 'stepSize' - Number - The step size, defaults to 32. The smaller the step size, the more accurate the search, but also the more expensive it is.
+-- 'filter' - Table / Function - The filter to use for the trace, defaults to an empty table.
+function conv.findSpaceInBox(boxMins, boxMaxs, entMins, entMaxs, stepSize, filter, collGroup, mask, spaceFilterFunc)
+
+    stepSize = stepSize or 32
+    
+    local center = (boxMins + boxMaxs) / 2
+    local points = {}
+
+    for x = boxMins.x, boxMaxs.x, stepSize do
+        for y = boxMins.y, boxMaxs.y, stepSize do
+            for z = boxMins.z, boxMaxs.z, stepSize do
+                local pos = Vector(x, y, z)
+                pos = spaceFilterFunc and spaceFilterFunc(pos) or not spaceFilterFunc and pos
+                if not pos then continue end
+                table.insert(points, pos)
+            end
+        end
+    end
+
+    table.sort(points, function(a, b)
+        return a:DistToSqr(center) < b:DistToSqr(center)
+    end)
+
+    for _, checkPos in ipairs(points) do
+        local trace = util.TraceHull({
+            start           = checkPos,
+            endpos          = checkPos,
+            mins            = entMins,
+            maxs            = entMaxs,
+            filter          = filter or {},
+            collisiongroup  = collGroup or COLLISION_GROUP_NONE, 
+            mask            = mask or MASK_SOLID
+        })
+
+        if not trace.StartSolid then
+            return checkPos
+        end
+    end
+
+    return nil
+end
+
+-- Returns a table with all the save values that match the filter
+-- 'showAll' - If true, will include all values, even those that are not normally saved
+-- 'filter' - A string to filter the keys of the save table. 
+-- Only keys that contain this string will be included in the returned table. 
+-- If nil, all keys will be included.
+function ENT:CONV_GetSaveTableFilter(showAll, filter)
+    local tbl
+    if filter then
+        tbl = {}
+        for k, v in pairs(self:GetSaveTable(showAll)) do           
+            if string.find(k, filter) then
+                tbl[k] = v
+            end
+        end
+    end
+    
+    return tbl or self:GetSaveTable(showAll)
+end 
+
 --[[
 ==================================================================================================
                     NPC UTILITIES
