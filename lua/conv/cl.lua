@@ -20,7 +20,7 @@ function CONV_INTERNAL_COCTranslate( ent, funcN, data )
 	elseif istable(ent) then
 		
 		--ent[ funcN ]( unpack( data ) )
-		ent[ funcN ]( "", unpack( data ) )
+		ent[ funcN ]( unpack( data ) )
 		
 	else
 		
@@ -78,11 +78,23 @@ end)
 concommand.Add( "conv_telemetry", function(ply, cmd, args)  
 	local enable = args[1] and tonumber(args[1]) > 0
 
+	ply.m_CONV_T_Refresh  = CurTime() + (args[2] or 0)
+	ply.m_CONV_T_UPDATE   = true
+	ply.m_CONV_T_FPS      = 0
+	ply.m_CONV_T_FPS_T    = 0
+	ply.m_CONV_T_PING     = 0
+	ply.m_CONV_T_PKTL     = 0
+
 	conv.addHUDElement("conv_telemetry", enable, function() 
 		local ply = LocalPlayer()
 		local w, h = 200, 100
-		local x, y = args and args[2] or conv.ScrWCenter() - ( w / 2 ), args and args[3] or conv.ScrHCenter() - 300
+		local x, y = args and args[3] or conv.ScrWCenter() - ( w / 2 ), args and args[4] or conv.ScrHCenter() - 300
 		draw.RoundedBox( 8, x, y, w, h, color_hl2hud_box )
+
+		if ply.m_CONV_T_Refresh <= CurTime() then
+			ply.m_CONV_T_UPDATE = true
+			ply.m_CONV_T_Refresh = CurTime() + (args[2] or 0)
+		end
 
 		local x1, y1 = x + 97, y + 15
 		local text = "TELEMETRY"
@@ -92,29 +104,31 @@ concommand.Add( "conv_telemetry", function(ply, cmd, args)
 		local text = "FRAMES/s:"
 		local textW, textH = draw.SimpleText( text, "HudHintTextLarge", x, y, color_hl2hud_text, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 		local x2, y2 = x + 110, y
-		local text2 = math.Round( ( 1 / FrameTime() ), 3 )
-		local textW2, textH2 = draw.SimpleText( text2, "HudHintTextLarge", x2, y2, color_hl2hud_text, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+		if ply.m_CONV_T_UPDATE then ply.m_CONV_T_FPS = math.Round( ( 1 / FrameTime() ), 3 ) end
+		local textW2, textH2 = draw.SimpleText( ply.m_CONV_T_FPS, "HudHintTextLarge", x2, y2, color_hl2hud_text, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
  
 		local x, y = x, y + textH
 		local text = "FRAME TIME:"
 		local textW, textH = draw.SimpleText( text, "HudHintTextLarge", x, y, color_hl2hud_text, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 		local x2, y2 = x + 110, y
-		local text2 = math.Round( FrameTime(), 5 )
-		local textW2, textH2 = draw.SimpleText( text2, "HudHintTextLarge", x2, y2, color_hl2hud_text, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+		if ply.m_CONV_T_UPDATE then ply.m_CONV_T_FPS_T = math.Round( FrameTime(), 5 ) end
+		local textW2, textH2 = draw.SimpleText( ply.m_CONV_T_FPS_T, "HudHintTextLarge", x2, y2, color_hl2hud_text, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 
 		local x, y = x, y + textH
 		local text = "PING:"
 		local textW, textH = draw.SimpleText( text, "HudHintTextLarge", x, y, color_hl2hud_text, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 		local x2, y2 = x + 110, y
-		local text2 = ply:Ping()
-		local textW2, textH2 = draw.SimpleText( text2, "HudHintTextLarge", x2, y2, color_hl2hud_text, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+		if ply.m_CONV_T_UPDATE then ply.m_CONV_T_PING = ply:Ping() end
+		local textW2, textH2 = draw.SimpleText( ply.m_CONV_T_PING, "HudHintTextLarge", x2, y2, color_hl2hud_text, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 		
 		local x, y = x, y + textH
 		local text = "PACKET LOSS:"
 		local textW, textH = draw.SimpleText( text, "HudHintTextLarge", x, y, color_hl2hud_text, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 		local x2, y2 = x + 110, y
-		local text2 = ply:PacketLoss() .. "%"
-		local textW2, textH2 = draw.SimpleText( text2, "HudHintTextLarge", x2, y2, color_hl2hud_text, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+		if ply.m_CONV_T_UPDATE then ply.m_CONV_T_PKTL = ply:PacketLoss() .. "%" end
+		local textW2, textH2 = draw.SimpleText( ply.m_CONV_T_PKTL, "HudHintTextLarge", x2, y2, color_hl2hud_text, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+
+		ply.m_CONV_T_UPDATE = false
 	end)
 end) 
 

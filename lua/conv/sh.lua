@@ -1,6 +1,7 @@
 local developer = GetConVar("developer")
 local ENT = FindMetaTable("Entity")
 local NPC = FindMetaTable("NPC")
+local vector_one = Vector( 1, 1, 1 )
 
 --[[
 ==================================================================================================
@@ -923,35 +924,59 @@ function ENT:CONV_EditBones(tab)
 
 end
 
+-- 'targetVec' - Vector to check if the entity is looking at
+-- 'fov' - Field of view in degrees
+-- 'innerFov' - Inner field of view in degrees (optional)
+-- 'maxDistance' - Maximum distance to check (optional)
+-- 'visCheck' - Whether to perform visibility check (optional)
+-- 'mask' - Collision mask for trace (optional)
+-- 'collisionGroup' - Collision group for trace (optional)
+function ENT:CONV_IsLookingAt(targetVec, fov, innerFov, maxDistance, visCheck, mask, collisionGroup)
+    local eyePos            = self:EyePos()
+    local diff              = targetVec - eyePos
+    local distance          = diff:Length()
 
--- Used to get the pos, ang and bone of the given hitgroup
--- 'HITGROUP_GENERIC'	0	1:1 damage. Melee weapons and fall damage typically hit this hitgroup. This hitgroup is not present on default player models.
---                          It is unknown how this is generated in GM:ScalePlayerDamage, but it occurs when shot by NPCs ( npc_combine_s ) for example.
--- 'HITGROUP_HEAD'	    1	Head
--- 'HITGROUP_CHEST'	    2	Chest
--- 'HITGROUP_STOMACH'	3	Stomach
--- 'HITGROUP_LEFTARM'	4	Left arm
--- 'HITGROUP_RIGHTARM'	5	Right arm
--- 'HITGROUP_LEFTLEG'	6	Left leg
--- 'HITGROUP_RIGHTLEG'	7	Right leg
--- 'HITGROUP_GEAR'	    10	Gear. Supposed to be belt area.
---                          This hitgroup is not present on default player models.
---                          Alerts NPC, but doesn't do damage or bleed (1/100th damage)
-function ENT:CONV_GetHitGroupBone( hg )
-	local numHitBoxSets = self:GetHitboxSetCount()
-	if numHitBoxSets then
-		for hboxset = 0, numHitBoxSets - 1 do
-			local numHitBoxes = self:GetHitBoxCount( hboxset )
-			for hitbox = 0, numHitBoxes - 1 do
-				if self:GetHitBoxHitGroup( hitbox, hboxset ) == hg then
-					local bone = self:GetHitBoxBone( hitbox, hboxset )
-					if ( !bone || bone < 0 ) then return false end
-					return self:GetBonePosition( bone ), bone -- if you can read this, You have a small we we
-				end
-			end
-		end
-	end
-	return nil, -1
+    if maxDistance and distance > maxDistance then
+        return false, 0
+    end
+
+    local cosHalfFov        = math.cos( math.rad( fov / 2 ) )
+
+    local dot               = self:EyeAngles():Forward()
+    dot                     = dot:Dot( diff / distance )
+
+    if dot < cosHalfFov then
+        return false, 0
+    end
+
+    if visCheck then
+        local ent           = ents.FindInBox( targetVec + -vector_one * fov, targetVec + vector_one * fov )[1]
+        local tr            = util.TraceLine( {
+            start           = eyePos,
+            endpos          = targetVec,
+            filter          = { self, ent },
+            mask            = mask or MASK_VISIBLE_AND_NPCS,
+            collisiongroup  = collisionGroup or COLLISION_GROUP_NONE
+        } )
+        debugoverlay.Text( targetVec, tr.Fraction, 5, false )
+        if tr.Fraction < 0.9 then
+            return false, 0
+        end
+    end
+
+    local cosHalfInnerFov   = 1
+    if innerFov and innerFov < fov then
+        cosHalfInnerFov     = math.cos( math.rad( innerFov / 2 ) )
+    end
+
+    local scale = 0
+    if dot >= cosHalfInnerFov then
+        scale           = 1
+    else
+        scale           = ( dot - cosHalfFov ) / ( cosHalfInnerFov - cosHalfFov )
+    end
+
+    return true, math.Clamp( scale, 0, 1 ), distance, math.Remap( distance, 0, maxDistance, 1, 0 )
 end
 
 -- Makes the entity spawn another entity of class `cls` using a traceline from its center to `pos`.
@@ -959,12 +984,81 @@ function ENT:CONV_CreateEntWithTrace(cls, pos)
     local ent = ents.Create(cls)
     local tr = util.TraceLine({
         start=self:WorldSpaceCenter(),
-        endpos=pos,
-        filter=self
+                            endpos=pos,
+                            filter=self
     })
     ent:SetPos(tr.HitPos+tr.HitNormal*8)
     return ent
 end
+
+-- Check if provided entity's mins and maxes can fit inside the provided box, 
+-- and returns a position inside the box where it can fit.
+-- It prioritizes points that are closer to the center of the box
+-- 'boxMins' - Vector - The box's mins.
+-- 'boxMaxs' - Vector - The box's maxs.
+-- 'entMins' - Vector - The entity's mins.
+-- 'entMaxs' - Vector - The entity's maxs.
+-- 'stepSize' - Number - The step size, defaults to 32. The smaller the step size, the more accurate the search, but also the more expensive it is.
+-- 'filter' - Table / Function - The filter to use for the trace, defaults to an empty table.
+function conv.findSpaceInBox(boxMins, boxMaxs, entMins, entMaxs, stepSize, filter, collGroup, mask, spaceFilterFunc)
+
+    stepSize = stepSize or 32
+    
+    local center = (boxMins + boxMaxs) / 2
+    local points = {}
+
+    for x = boxMins.x, boxMaxs.x, stepSize do
+        for y = boxMins.y, boxMaxs.y, stepSize do
+            for z = boxMins.z, boxMaxs.z, stepSize do
+                local pos = Vector(x, y, z)
+                pos = spaceFilterFunc and spaceFilterFunc(pos) or not spaceFilterFunc and pos
+                if not pos then continue end
+                table.insert(points, pos)
+            end
+        end
+    end
+
+    table.sort(points, function(a, b)
+        return a:DistToSqr(center) < b:DistToSqr(center)
+    end)
+
+    for _, checkPos in ipairs(points) do
+        local trace = util.TraceHull({
+            start           = checkPos,
+            endpos          = checkPos,
+            mins            = entMins,
+            maxs            = entMaxs,
+            filter          = filter or {},
+            collisiongroup  = collGroup or COLLISION_GROUP_NONE, 
+            mask            = mask or MASK_SOLID
+        })
+
+        if not trace.StartSolid then
+            return checkPos
+        end
+    end
+
+    return nil
+end
+
+-- Returns a table with all the save values that match the filter
+-- 'showAll' - If true, will include all values, even those that are not normally saved
+-- 'filter' - A string to filter the keys of the save table. 
+-- Only keys that contain this string will be included in the returned table. 
+-- If nil, all keys will be included.
+function ENT:CONV_GetSaveTableFilter(showAll, filter)
+    local tbl
+    if filter then
+        tbl = {}
+        for k, v in pairs(self:GetSaveTable(showAll)) do           
+            if string.find(k, filter) then
+                tbl[k] = v
+            end
+        end
+    end
+    
+    return tbl or self:GetSaveTable(showAll)
+end 
 
 --[[
 ==================================================================================================
@@ -985,12 +1079,13 @@ function NPC:CONV_ListConditions()
 
     local tab = {}
 
-	for c = 0, table.Count( COND ) do
+	for c = 0, 128 do -- in the baseline Source SDK 2013, there are exactly 128 maximum possible conditions allocated by the engine (MAX_CONDITIONS = 32 * 4)
 
 		if ( self:HasCondition( c ) ) then
 
-            local text = self:ConditionName( c ) .. " (" .. c .. ")"
-            table.insert( tab, text )
+            local name = self:ConditionName( c )
+            name = COND[string.gsub( name, "COND_", "")] and string.gsub( name, "COND_", "COND.") or name
+            tab[c] = name
 
 		end
 
@@ -1000,6 +1095,36 @@ function NPC:CONV_ListConditions()
 
 end
 
+-- Used to get the pos, ang and bone of the given hitgroup
+-- 'HITGROUP_GENERIC'	0	1:1 damage. Melee weapons and fall damage typically hit this hitgroup. This hitgroup is not present on default player models.
+--                          It is unknown how this is generated in GM:ScalePlayerDamage, but it occurs when shot by NPCs ( npc_combine_s ) for example.
+-- 'HITGROUP_HEAD'	    1	Head
+-- 'HITGROUP_CHEST'	    2	Chest
+-- 'HITGROUP_STOMACH'	3	Stomach
+-- 'HITGROUP_LEFTARM'	4	Left arm
+-- 'HITGROUP_RIGHTARM'	5	Right arm
+-- 'HITGROUP_LEFTLEG'	6	Left leg
+-- 'HITGROUP_RIGHTLEG'	7	Right leg
+-- 'HITGROUP_GEAR'	    10	Gear. Supposed to be belt area.
+--                          This hitgroup is not present on default player models.
+--                          Alerts NPC, but doesn't do damage or bleed (1/100th damage)
+function ENT:CONV_GetHitGroupBone( hg )
+	local numHitBoxSets = self:GetHitboxSetCount()
+	if numHitBoxSets then
+		for hboxset = 0, numHitBoxSets - 1 do
+			local numHitBoxes = self:GetHitBoxCount( hboxset )
+			for hitbox = 0, numHitBoxes - 1 do
+				if self:GetHitBoxHitGroup( hitbox, hboxset ) == hg then                
+					local bone = self:GetHitBoxBone( hitbox, hboxset )
+					if ( !bone || bone < 0 ) then return false end
+					local pos, ang = self:GetBonePosition( bone )
+					return pos, ang, bone
+				end
+			end
+		end
+	end
+	return nil, -1
+end
 
 --[[
 ==================================================================================================
@@ -1087,6 +1212,15 @@ function conv.stringToTable( str )
     tbl = conv.tablePairsToIPairs( tbl )
 
     return tbl
+end
+
+-- Returns the key and value positioned after the supplied key in a SEQUENTIAL table. If it isn't found then the first element in the table is returned.
+function conv.tableNext( tbl, lastKey )
+    local key, val = next( tbl, lastKey )
+    if key != nil then
+        return key, val
+    end
+    return next( tbl )
 end
 
 --[[
